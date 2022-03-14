@@ -48,15 +48,15 @@ sudo yum module reset php
 echo "Installing php 5.6 \n"
 sudo yum module install php:remi-5.6
 echo "Installing php mariadb  \n"
-sudo yum --enablerepo=remi install php httpd mariadb-server mariadb
+sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
 
 sudo yum update ; yum upgrade
 echo "Installing dependencies \n"
-sudo yum --enablerepo=remi install php-mcrypt php-cli php-gd php-curl php-mysql php-1dap php-zip php-fileinfo php-fpm php-xml
-sudo yum --enablerepo=remi install bind bind-utils 
-sudo yum --enablerepo=remi install epel-release
-sudo yum --enablerepo=remi install nano wget net-tools varnish
-sudo yum --enablerepo=remi install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
+sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-mysql php-1dap php-zip php-fileinfo php-fpm php-xml
+sudo yum --enablerepo=remi -y install bind bind-utils 
+sudo yum --enablerepo=remi -y install epel-release
+sudo yum --enablerepo=remi -y install nano wget net-tools varnish
+sudo yum --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
 
 sudo yum update ; yum upgrade
 echo "Starting services \n"
