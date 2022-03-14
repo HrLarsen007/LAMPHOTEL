@@ -14,10 +14,12 @@ echo $my_version
 echo $my_name
 echo $my_prettyname
 
+FILE=/etc/
 
-if [ ${my_id} = "rhel" ] ; then
 
-	if [ ${my_version::1} != '7' || ${my_version::1} != '8' ] ; then
+if [ ${my_id} -eq "rhel" ] ; then
+
+	if [ ${my_version::1} -ne '7' OR ${my_version::1} -ne '8' ] ; then
 		echo "This script only supports version 7.x or 8.x of rhel"
 		exit 0
 	fi
@@ -28,14 +30,23 @@ fi
 
 echo "Setting up LAMP-STACK with $my_prettyname dependcies"
 
-: <<'END'
+if [ -f "epel-release-latest-${my_version::1}.noarch.rpm" ] ; then
+	echo "Found epel-release-latest-${my_version::1}.noarch.rpm, skipping installation"
+else
+	sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-${my_version::1}.noarch.rpm
+fi
 
-sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-${my_version::1}.noarch.rpm
-sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-${my_version::1}.rpm
+if [ -f "remi-release-${my_version::1}.rpm" ] ; then
+	echo "Found remi-release-${my_version::1}.rpm, skipping installation"
+else
+	sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-${my_version::1}.rpm
+fi
 sudo yum -y install yum-utils
 sudo subscription-manager repos --enable "codeready-builder-for-rhel-${my_version::1}-*-rpms"
-## sudo subscription-manager repos --enable codeready-builder-for-rhel-8-$(arch)-rpms
 sudo yum-config-manager --enable remi-php56  # [Install PHP 5.6]
+
+: <<'END'
+
 
 sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo yum -y install php php-mcrypt php-cli php-gd php-curl php-mysql php-ldap php-zip php-fileinfo php-xml php-fpm
@@ -46,8 +57,8 @@ sudo yum -y install	nano wgt varnish
 sudo yum -y install epel-release ; yum -y update ; yum -y upgrade 
 sudo yum -y install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
 
-sudo systemctl enable fail2ban
 sudo systemctl start fail2ban 
+sudo systemctl enable fail2ban
 sudo systemctl start named.service
 sudo systemctl enable named.serivce
 sudo systemctl start httpd.service
