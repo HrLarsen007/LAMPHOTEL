@@ -28,7 +28,7 @@ if (( $my_id == "rhel" )) ; then
 		echo "This script only supports version 7.x or 8.x of rhel"
 		exit 0
 	fi
-el 
+else 
 	echo "This script does not support $my_prettyname"
 	exit 0
 fi
