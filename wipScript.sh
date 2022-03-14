@@ -35,6 +35,8 @@ fi
 
 echo "Setting up LAMP-STACK with $my_prettyname dependcies"
 
+sudo yum -y update ; yum -y upgrade ; yum clean all
+
 sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm
 sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm
 sudo yum -y install yum-utils
@@ -43,10 +45,10 @@ sudo yum-config-manager --enable remi-php56  # [Install PHP 5.6]
 
 sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo yum -y install php php-mcrypt php-cli php-gd php-curl php-mysql php-ldap php-zip php-fileinfo php-xml php-fpm
-sudo yum -y install httpd bind bind-utils mariadb-server mariadb nano mc net-tools wget varnish
+sudo yum -y install httpd bind bind-utils
 sudo yum -y install mariadb-server mariadb
 sudo yum -y install	mc net-tools
-sudo yum -y install	nano wgt varnish
+sudo yum -y install	nano wget varnish
 sudo yum -y install epel-release ; yum -y update ; yum -y upgrade
 sudo yum -y install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
 
