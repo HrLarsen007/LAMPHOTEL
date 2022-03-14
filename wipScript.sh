@@ -33,15 +33,76 @@ else
 	exit 0
 fi
 
-echo "Setting up LAMP-STACK with $my_prettyname dependcies"
 
+
+echo "Setting up LAMP-STACK with $my_prettyname dependcies"
+sudo yum update ; yum upgrade ; yum clean all
+sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
+sudo yum install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
+sudo yum update
+sudo yum repolist
+sudo yum -y install yum-utils
+sudo yum module reset php
+sudo yum module install php:remi-5.6
+sudo yum --enablerepo=remi install php httpd mariadb-server mariadb
+
+sudo yum update ; yum upgrade
+
+sudo yum --enablerepo=remi install php-mcrypt php-cli php-gd php-curl php-mysql php-1dap php-zip php-fileinfo php-fpm php-xml
+sudo yum --enablerepo=remi install bind bind-utils 
+sudo yum --enablerepo=remi install epel-release
+sudo yum --enablerepo=remi install nano wget net-tools varnish
+sudo yum --enablerepo=remi install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
+
+sudo yum update ; yum upgrade
+
+sudo systemctl start fail2ban
+sudo systemctl enable fail2ban 
+sudo systemctl start named.service
+sudo systemctl enable named.serivce
+sudo systemctl start httpd.service
+sudo systemctl enable httpd.service
+sudo systemctl start mariadb.service
+sudo systemctl enable mariadb.service
+sudo systemctl start varnish.service
+sudo systemctl enable varnish.service
+
+sudo mysql_secure_installation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+: <<'END'
 sudo yum -y update ; yum -y upgrade ; yum clean all
 
 sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm
-sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm
-sudo yum -y install yum-utils
+sudo yum repolist
+sudo yum -y update
 sudo subscription-manager repos --enable "codeready-builder-for-rhel-$my_version-*-rpms"
+sudo yum repolist
+sudo yum -y update
+sudo yum -y install https://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm
+
+
+sudo yum -y install yum-utils
+#sudo subscription-manager repos --enable "codeready-builder-for-rhel-$my_version-*-rpms"
 sudo yum-config-manager --enable remi-php56  # [Install PHP 5.6]
+sudo yum --enablerepo=remi install php-xxx
 
 sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo yum -y install php php-mcrypt php-cli php-gd php-curl php-mysql php-ldap php-zip php-fileinfo php-xml php-fpm
@@ -64,3 +125,4 @@ sudo systemctl start varnish.service
 sudo systemctl enable varnish.service
 
 sudo mysql_secure_installation
+END
