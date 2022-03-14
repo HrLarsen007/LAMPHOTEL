@@ -44,9 +44,9 @@ sudo yum install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rp
 sudo yum update
 sudo yum repolist
 sudo yum -y install yum-utils
-sudo yum module reset php
+sudo yum module -y reset php
 echo "Installing php 5.6 \n"
-sudo yum module install php:remi-5.6
+sudo yum module -y install php:remi-5.6
 echo "Installing php mariadb  \n"
 sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
 
