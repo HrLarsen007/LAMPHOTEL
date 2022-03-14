@@ -35,18 +35,11 @@ fi
 
 echo "Setting up LAMP-STACK with $my_prettyname dependcies"
 
-if (sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm) ; then
-	echo "Fuck"
-else 
-	echo "Er installeret"
-fi
-##sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm
-##sudo yum -y install yum-utils
-##sudo subscription-manager repos --enable "codeready-builder-for-rhel-$my_version-*-rpms"
-##sudo yum-config-manager --enable remi-php56  # [Install PHP 5.6]
-
-: <<'END'
-
+sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm
+sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm
+sudo yum -y install yum-utils
+sudo subscription-manager repos --enable "codeready-builder-for-rhel-$my_version-*-rpms"
+sudo yum-config-manager --enable remi-php56  # [Install PHP 5.6]
 
 sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo yum -y install php php-mcrypt php-cli php-gd php-curl php-mysql php-ldap php-zip php-fileinfo php-xml php-fpm
@@ -69,4 +62,3 @@ sudo systemctl start varnish.service
 sudo systemctl enable varnish.service
 
 sudo mysql_secure_installation
-END
