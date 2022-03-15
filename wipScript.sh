@@ -35,23 +35,23 @@ fi
 
 
 
-echo "Setting up LAMP-STACK with $my_prettyname dependcies \n"
+echo "\nSetting up LAMP-STACK with $my_prettyname dependcies\n"
 sudo yum update ; yum upgrade ; yum clean all
-echo "Installing epel \n"
+echo "\nInstalling epel\n"
 sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
-echo "Installing remi \n"
+echo "\nInstalling remi\n"
 sudo yum install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
 sudo yum update
 sudo yum repolist
 sudo yum -y install yum-utils
 sudo yum module -y reset php
-echo "Installing php 5.6 \n"
+echo "\nInstalling php 5.6\n"
 sudo yum module -y install php:remi-5.6
-echo "Installing php mariadb  \n"
+echo "\nInstalling php mariadb\n"
 sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
 
 sudo yum update ; yum upgrade
-echo "Installing dependencies \n"
+echo "\nInstalling dependencies\n"
 sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-mysql php-1dap php-zip php-fileinfo php-fpm php-xml
 sudo yum --enablerepo=remi -y install bind bind-utils 
 sudo yum --enablerepo=remi -y install epel-release
@@ -59,7 +59,7 @@ sudo yum --enablerepo=remi -y install nano wget net-tools varnish
 sudo yum --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
 
 sudo yum update ; yum upgrade
-echo "Starting services \n"
+echo "\nStarting services\n"
 sudo systemctl start fail2ban
 sudo systemctl enable fail2ban 
 sudo systemctl start named.service
@@ -71,8 +71,8 @@ sudo systemctl enable mariadb.service
 sudo systemctl start varnish.service
 sudo systemctl enable varnish.service
 
-echo "Installing up MYSQL \n"
-sudo mysql_secure_installation
+echo "\nInstalling up MYSQL \n"
+#sudo mysql_secure_installation
 
 
 
