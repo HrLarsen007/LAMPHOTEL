@@ -36,17 +36,17 @@ fi
 
 echo "\nSetting up LAMP-STACK with $my_prettyname dependcies\n"
 sudo yum update ; yum upgrade ; yum clean all
-echo -e "$green [+] Installing epel ' $default"
-sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
-echo -e "$green [+] Installing remi ' $default"
-sudo yum install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
+echo -e "$green [+] Installing epel $default"
+sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
+echo -e "$green [+] Installing remi $default"
+sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
 sudo yum update
 sudo yum repolist
 sudo yum -y install yum-utils
 #sudo yum module -y reset php
 #sudo yum module -y install php:remi-5.6
 echo -e "$green [+] Installing remi's php5.6' $default"
-sudo yum-config-manager --enable remi-php56  # [Install PHP 5.6]
+sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6]
 echo -e "$green [+] Installing php http mariadb ' $default"
 sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
 
