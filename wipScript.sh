@@ -55,7 +55,7 @@ echo "\nInstalling dependencies\n"
 sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-mysql php-1dap php-zip php-fileinfo php-fpm php-xml
 sudo yum --enablerepo=remi -y install bind bind-utils 
 sudo yum --enablerepo=remi -y install epel-release
-sudo yum --enablerepo=remi -y install nano wget net-tools varnish
+sudo yum --enablerepo=remi -y install nano wget net-tools varnish rsync
 sudo yum --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
 
 sudo yum update ; yum upgrade
@@ -88,7 +88,7 @@ echo 'gpgcheck=1' >> /etc/yum.repos.d/webmin.repo
 sudo wget https://download.webmin.com/jcameron-key.asc
 sudo yum -y update ; yum -y upgrade 
 sudo rpm --import jcameron-key.asc
-sudo yum install webmin -y
+sudo yum -y install webmin
 
 ## Mail server
 sudo yum -y remove sendmail*
@@ -151,7 +151,6 @@ sudo systemctl start mariadb
 sudo systemctl start httpd
 sudo systemctl enable mariadb
 sudo systemctl enable httpd
-mysql_secure_installation
 
 # Downloading source
 echo -e "$green [+] Downloading Wordpress$default"
@@ -162,6 +161,11 @@ tar xpvf latest.tar.gz
 # Copying files to server root
 echo -e "$green [+] Copying files to $server_root"
 sudo rsync -avP wordpress/ $server_root
+
+
+#Cleaning up after myslef, since my mom isn't here!
+rm -rf latest.tar.gz
+rm -rf wordpress
 
 # Setting up permissions
 echo -e "$green [+] Changing permissions$default"
@@ -185,8 +189,10 @@ SQL=${Q1}${Q2}${Q3}${Q4}${Q5}
 `mysql -u root -p -e "$SQL"`
 
 # Generating wp-config.php file
-cp $server_root/wp-config-sample.php $server_root/wp-config.php
-sed -i "s/database_name_here/$database/g" $server_root/wp-config.php
-sed -i "s/username_here/$user/g" $server_root/wp-config.php
-sed -i "s/password_here/$pass/g" $server_root/wp-config.php
-sed -i "s/wp_/$table/g" $server_root/wp-config.php
+sudo cp $server_root/wp-config-sample.php $server_root/wp-config.php
+sudo sed -i "s/database_name_here/$database/g" $server_root/wp-config.php
+sudo sed -i "s/username_here/$user/g" $server_root/wp-config.php
+sudo sed -i "s/password_here/$pass/g" $server_root/wp-config.php
+sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
+
+echo "Finishing / End of the script"
