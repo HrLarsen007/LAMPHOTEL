@@ -72,62 +72,121 @@ sudo systemctl start varnish.service
 sudo systemctl enable varnish.service
 
 echo "\nInstalling up MYSQL \n"
-#sudo mysql_secure_installation
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-: <<'END'
-sudo yum -y update ; yum -y upgrade ; yum clean all
-
-sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm
-sudo yum repolist
-sudo yum -y update
-sudo subscription-manager repos --enable "codeready-builder-for-rhel-$my_version-*-rpms"
-sudo yum repolist
-sudo yum -y update
-sudo yum -y install https://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm
-
-
-sudo yum -y install yum-utils
-#sudo subscription-manager repos --enable "codeready-builder-for-rhel-$my_version-*-rpms"
-sudo yum-config-manager --enable remi-php56  # [Install PHP 5.6]
-sudo yum --enablerepo=remi install php-xxx
-
-sudo yum -y update ; yum -y upgrade ; yum clean all
-sudo yum -y install php php-mcrypt php-cli php-gd php-curl php-mysql php-ldap php-zip php-fileinfo php-xml php-fpm
-sudo yum -y install httpd bind bind-utils
-sudo yum -y install mariadb-server mariadb
-sudo yum -y install	mc net-tools
-sudo yum -y install	nano wget varnish
-sudo yum -y install epel-release ; yum -y update ; yum -y upgrade
-sudo yum -y install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
-
-sudo systemctl start fail2ban
-sudo systemctl enable fail2ban
-sudo systemctl start named.service
-sudo systemctl enable named.serivce
-sudo systemctl start httpd.service
-sudo systemctl enable httpd.service
-sudo systemctl start mariadb.service
-sudo systemctl enable mariadb.service
-sudo systemctl start varnish.service
-sudo systemctl enable varnish.service
-
 sudo mysql_secure_installation
-END
+
+touch /var/www/html/phpinfo.php && echo '<?php phpinfo(); ?>' >> /var/www/html/phpinfo.php 
+
+touch /etc/yum.repos.d/webmin.repo && 
+echo '[Webmin]' >> /etc/yum.repos.d/webmin.repo
+echo 'name=Webmin Distribution Neutral' >> /etc/yum.repos.d/webmin.repo
+echo '#baseurl=https://download.webmin.com/download/yum' >> /etc/yum.repos.d/webmin.repo
+echo 'mirrorlist=https://download.webmin.com/download/yum/mirrorlist' >> /etc/yum.repos.d/webmin.repo
+echo 'enabled=1' >> /etc/yum.repos.d/webmin.repo
+echo 'gpgkey=https://download.webmin.com/jcameron-key.asc' >> /etc/yum.repos.d/webmin.repo
+echo 'gpgcheck=1' >> /etc/yum.repos.d/webmin.repo
+
+sudo wget https://download.webmin.com/jcameron-key.asc
+sudo yum -y update ; yum -y upgrade 
+sudo rpm --import jcameron-key.asc
+sudo yum install webmin -y
+
+## Mail server
+sudo yum -y remove sendmail*
+chkconfig --level 345 dovecot on
+
+sudo firewall-cmd --permanent --zone=public --add-service=http 
+sudo firewall-cmd --permanent --zone=public --add-service=https
+sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp 
+sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
+sudo firewall-cmd --reload
+
+sudo systemctl restart httpd.service
+
+yum update -y selinux-policy*
+
+sudo yum -y install dialog wget
+
+
+# Starting script
+server_root="/var/www/html"
+wp_source="https://wordpress.org/latest.tar.gz"
+user="wpuser"
+database="wpdatabase"
+table="wp_"
+
+# Setting up variables
+dialog --title "Setting variables" --yesno "Use $server_root as server root?" 0 0
+if [ "$?" = "1" ] ; then
+	server_root=$( dialog --stdout --inputbox "Set server root:" 0 0 )
+fi
+
+dialog --title "Setting variables" --yesno "Set $database as WordPress Database?" 0 0
+if [ "$?" = "1" ] ; then
+	database=$( dialog --stdout --inputbox "Set WordPress DB name:" 0 0 )
+fi
+
+dialog --title "Setting variables" --yesno "Set $table as WordPress table prefix?" 0 0
+if [ "$?" = "1" ] ; then
+	table=$( dialog --stdout --inputbox "Set WordPress table prefix:" 0 0 )
+fi
+
+dialog --title "Setting variables" --yesno "Use $user as WordPress database username?" 0 0
+if [ "$?" = "1" ] ; then
+	user=$( dialog --stdout --inputbox "Set WordPress username:" 0 0 )
+fi
+
+dialog --title "setting variables" --msgbox \
+"[Server Root] = $server_root \
+[Database name] = $database \
+[Table prefix] = $table \
+[MySQL Username] = $user" 10 35 --and-widget
+
+
+# Installing and configuring dependencies according to each distro's package manager
+echo -e "$green [+] Installing and configuring dependencies $default"
+
+sudo yum install httpd php php-gd php-mysql php-xml mariadb-server mariadb
+sudo systemctl start mariadb
+sudo systemctl start httpd
+sudo systemctl enable mariadb
+sudo systemctl enable httpd
+mysql_secure_installation
+
+# Downloading source
+echo -e "$green [+] Downloading Wordpress$default"
+wget $wp_source
+echo -e "$green [+] Unpacking Wordpress$default"
+tar xpvf latest.tar.gz
+
+# Copying files to server root
+echo -e "$green [+] Copying files to $server_root"
+sudo rsync -avP wordpress/ $server_root
+
+# Setting up permissions
+echo -e "$green [+] Changing permissions$default"
+if [ -e "/etc/yum" ] ; then
+	sudo chown apache:apache $server_root/* -R 
+fi
+mv $server_root/index.html $server_root/index.html.orig
+
+# Configuring MySQL Database
+pass=$( dialog --stdout --inputbox "Type $user@localhost password" 0 0 )
+echo -e "$green [+] Type MySQL root password $default"
+
+
+Q1="CREATE DATABASE $database;"
+Q2="CREATE USER $user@localhost;"
+Q3="SET PASSWORD FOR $user@localhost= PASSWORD('$pass');"
+Q4="GRANT ALL PRIVILEGES on $database.* TO $user@localhost;"
+Q5="FLUSH PRIVILEGES;"
+SQL=${Q1}${Q2}${Q3}${Q4}${Q5}
+
+`mysql -u root -p -e "$SQL"`
+
+# Generating wp-config.php file
+cp $server_root/wp-config-sample.php $server_root/wp-config.php
+sed -i "s/database_name_here/$database/g" $server_root/wp-config.php
+sed -i "s/username_here/$user/g" $server_root/wp-config.php
+sed -i "s/password_here/$pass/g" $server_root/wp-config.php
+sed -i "s/wp_/$table/g" $server_root/wp-config.php
