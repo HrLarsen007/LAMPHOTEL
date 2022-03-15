@@ -22,14 +22,13 @@ default="\033[00m"
 if (( $my_id == "rhel" )) ; then
 
 	if (( $my_version == '7' || $my_version == '8' )) ; then
-
-		echo "Correct Version"
+		echo -e "$green [+] We are using an acceptable version of Rhel to use this script!' $default"
 	else 
-		echo "This script only supports version 7.x or 8.x of rhel"
+		echo -e "$red [-] This script only supports version 7.x or 8.x of rhel ' $default"
 		exit 0
 	fi
 else 
-	echo "This script does not support $my_prettyname"
+	echo -e "$red [-] This script does not support $my_prettyname ' $default"
 	exit 0
 fi
 
@@ -37,21 +36,23 @@ fi
 
 echo "\nSetting up LAMP-STACK with $my_prettyname dependcies\n"
 sudo yum update ; yum upgrade ; yum clean all
-echo "\nInstalling epel\n"
+echo -e "$green [+] Installing epel ' $default"
 sudo yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
-echo "\nInstalling remi\n"
+echo -e "$green [+] Installing remi ' $default"
 sudo yum install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
 sudo yum update
 sudo yum repolist
 sudo yum -y install yum-utils
-sudo yum module -y reset php
-echo "\nInstalling php 5.6\n"
-sudo yum module -y install php:remi-5.6
-echo "\nInstalling php mariadb\n"
+#sudo yum module -y reset php
+#sudo yum module -y install php:remi-5.6
+echo -e "$green [+] Installing remi's php5.6' $default"
+sudo yum-config-manager --enable remi-php56  # [Install PHP 5.6]
+echo -e "$green [+] Installing php http mariadb ' $default"
 sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
 
 sudo yum update ; yum upgrade
-echo "\nInstalling dependencies\n"
+
+echo -e "$green [+] Installing dependencies ' $default"
 sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-mysql php-1dap php-zip php-fileinfo php-fpm php-xml
 sudo yum --enablerepo=remi -y install bind bind-utils 
 sudo yum --enablerepo=remi -y install epel-release
@@ -59,7 +60,7 @@ sudo yum --enablerepo=remi -y install nano wget net-tools varnish rsync
 sudo yum --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
 
 sudo yum update ; yum upgrade
-echo "\nStarting services\n"
+echo -e "$green [+] Starting services ' $default"
 sudo systemctl start fail2ban
 sudo systemctl enable fail2ban 
 sudo systemctl start named.service
@@ -71,7 +72,7 @@ sudo systemctl enable mariadb.service
 sudo systemctl start varnish.service
 sudo systemctl enable varnish.service
 
-echo "\nInstalling up MYSQL \n"
+echo -e "$green [+] Installing MySQL ' $default"
 sudo mysql_secure_installation
 
 touch /var/www/html/phpinfo.php && echo '<?php phpinfo(); ?>' >> /var/www/html/phpinfo.php 
@@ -195,4 +196,4 @@ sudo sed -i "s/username_here/$user/g" $server_root/wp-config.php
 sudo sed -i "s/password_here/$pass/g" $server_root/wp-config.php
 sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
 
-echo "Finishing / End of the script"
+echo -e "$green [+] Finishing / End of the script' $default"
