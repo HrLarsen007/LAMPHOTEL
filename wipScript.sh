@@ -191,7 +191,7 @@ if [ -e "/etc/yum" ] ; then
 	sudo systemctl enable httpd
 	mysql_secure_installation
 elif [ -e "/etc/apt" ] ; then
-	sudo $yap -y install apache2 php8 php8-gd php8-mysql libapache2-mod-php8
+	sudo $yap -y install apache2 php8.1 php8.1-gd php8.1-mysql libapache2-mod-php8.1
 	sudo $yap -y install mysql-server libmysqlclient-dev
 fi
 
