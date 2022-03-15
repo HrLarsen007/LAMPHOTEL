@@ -3,6 +3,8 @@
 
 
 
+
+
 _my_version=$(awk -F'=' '/VERSION_ID/{ gsub(/"/,""); print $2}' /etc/os-release)
 _my_name=$(awk -F'=' '/NAME/{ gsub(/"/,""); print $2}' /etc/os-release)
 _my_prettyname=$(awk -F'=' '/PRETTY_NAME/{ gsub(/"/,""); print $2}' /etc/os-release)
@@ -17,7 +19,16 @@ red="\033[31m"
 white="\e[0;37m"
 default="\033[00m"
 
+yap="none"
 
+if [ -e "/etc/yum" ] ; then
+	yap="yum"
+elif [ -e "/etc/yum" ]; then
+	yap="apt-get"
+else 
+	echo -e "$red [-] A not supported OS, exiting the script "
+	exit 0
+fi
 
 if (( $my_id == "rhel" )) ; then
 
@@ -43,11 +54,12 @@ sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version
 sudo yum -y update
 sudo yum repolist
 sudo yum -y install yum-utils
+echo -e "$green [+] Installing remi's php8.1 $default"
 sudo yum module -y reset php
 sudo yum module -y install php:remi-8.1
 sudo yum -y update
-#echo -e "$green [+] Installing remi's php5.6 $default"
-#sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6]
+
+#sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6] Not working for EL or RHEL 8
 
 
 echo -e "$green [+] Installing php http mariadb $default"
@@ -61,6 +73,7 @@ sudo yum --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opcac
 sudo yum --enablerepo=remi -y install bind bind-utils 
 sudo yum --enablerepo=remi -y install epel-release
 sudo yum --enablerepo=remi -y install nano wget net-tools varnish rsync
+sudo yum --enablerepo=remo -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
 sudo yum --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot 
 
 ## TODO system-switch-mail system-switch-mail-gnome
@@ -79,17 +92,13 @@ sudo systemctl enable fail2ban
 sudo systemctl start named
 sudo systemctl enable named
 
-#sudo systemctl status fail2ban
-#sudo systemctl status named.service
-#sudo systemctl status mariadb.service
-#sudo systemctl status varnish.service
-#sudo systemctl status httpd.service
-
 echo -e "$green [+] Installing MySQL $default"
 sudo mysql_secure_installation
 
+##Setting up php test site
 touch /var/www/html/phpinfo.php && echo '<?php phpinfo(); ?>' >> /var/www/html/phpinfo.php 
 
+#Setting up Webmin repo information
 touch /etc/yum.repos.d/webmin.repo && 
 echo '[Webmin]' >> /etc/yum.repos.d/webmin.repo
 echo 'name=Webmin Distribution Neutral' >> /etc/yum.repos.d/webmin.repo
@@ -119,13 +128,14 @@ systemctl enable postfix
 chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
 chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
 
+## Creating firewall execptions
+
 sudo firewall-cmd --permanent --zone=public --add-service=smtp
 sudo firewall-cmd --permanent --zone=public --add-service=http 
 sudo firewall-cmd --permanent --zone=public --add-service=https
 sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp 
 sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
 sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
-
 sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
