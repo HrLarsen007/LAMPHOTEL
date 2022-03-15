@@ -46,39 +46,39 @@ fi
 
 
 echo "\nSetting up LAMP-STACK with $my_prettyname dependcies\n"
-sudo yum update ; yum upgrade ; yum clean all
+sudo $yap update ; $yap upgrade ; $yap clean all
 echo -e "$green [+] Installing epel $default"
-sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
+sudo $yap -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
 echo -e "$green [+] Installing remi $default"
-sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
-sudo yum -y update
-sudo yum repolist
-sudo yum -y install yum-utils
+sudo $yap -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
+sudo $yap -y update
+sudo $yap repolist
+sudo $yap -y install $yap-utils
 echo -e "$green [+] Installing remi's php8.1 $default"
-sudo yum module -y reset php
-sudo yum module -y install php:remi-8.1
-sudo yum -y update
+sudo $yap module -y reset php
+sudo $yap module -y install php:remi-8.1
+sudo $yap -y update
 
 #sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6] Not working for EL or RHEL 8
 
 
 echo -e "$green [+] Installing php http mariadb $default"
-sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
+sudo $yap --enablerepo=remi -y install php httpd mariadb-server mariadb
 
-sudo yum -y update ; yum -y upgrade
+sudo $yap -y update ; $yap -y upgrade
 
 echo -e "$green [+] Installing dependencies $default"
-sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-1dap php-zip php-fileinfo php-fpm php-xml
-sudo yum --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
-sudo yum --enablerepo=remi -y install bind bind-utils 
-sudo yum --enablerepo=remi -y install epel-release
-sudo yum --enablerepo=remi -y install nano wget net-tools varnish rsync
-sudo yum --enablerepo=remo -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
-sudo yum --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot 
+sudo $yap --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-1dap php-zip php-fileinfo php-fpm php-xml
+sudo $yap --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
+sudo $yap --enablerepo=remi -y install bind bind-utils 
+sudo $yap --enablerepo=remi -y install epel-release
+sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync
+sudo $yap --enablerepo=remo -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
+sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot 
 
 ## TODO system-switch-mail system-switch-mail-gnome
 
-sudo yum update ; yum upgrade
+sudo $yap update ; $yap upgrade
 echo -e "$green [+] Starting services ' $default"
 
 sudo systemctl start httpd.service
@@ -109,18 +109,18 @@ echo 'gpgkey=https://download.webmin.com/jcameron-key.asc' >> /etc/yum.repos.d/w
 echo 'gpgcheck=1' >> /etc/yum.repos.d/webmin.repo
 
 sudo wget https://download.webmin.com/jcameron-key.asc
-sudo yum -y update ; yum -y upgrade 
-sudo rpm --import jcameron-key.asc
-sudo yum -y install webmin
+sudo $yap -y update ; $yap -y upgrade 
+sudo $yap --import jcameron-key.asc
+sudo $yap -y install webmin
 
 ## Mail server
 systemctl stop sendmail
 systemctl disable  sendmail 
-sudo yum -y remove sendmail*
+sudo $yap -y remove sendmail*
 
 chkconfig --level 345 dovecot on
 
-sudo yum -y install postfix
+sudo $yap -y install postfix
 
 systemctl start postfix
 systemctl enable postfix
@@ -140,9 +140,9 @@ sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
 
-yum update -y selinux-policy*
+sudo $yap update -y selinux-policy*
 
-sudo yum -y install dialog wget
+sudo $yap -y install dialog wget
 
 
 # Starting script
@@ -183,7 +183,19 @@ dialog --title "setting variables" --msgbox \
 # Installing and configuring dependencies according to each distro's package manager
 echo -e "$green [+] Installing and configuring dependencies $default"
 
-sudo yum install httpd php php-gd php-mysql php-xml mariadb-server mariadb
+if [ -e "/etc/yum" ] ; then
+	sudo $yap -y install httpd php php-gd php-mysql php-xml mariadb-server mariadb
+	sudo systemctl start mariadb
+	sudo systemctl start httpd
+	sudo systemctl enable mariadb
+	sudo systemctl enable httpd
+	mysql_secure_installation
+elif [ -e "/etc/apt" ] ; then
+	sudo $yap -y install apache2 php8 php8-gd php8-mysql libapache2-mod-php8
+	sudo $yap -y install mysql-server libmysqlclient-dev
+fi
+
+sudo $yap install httpd php php-gd php-mysql php-xml mariadb-server mariadb
 sudo systemctl start mariadb
 sudo systemctl start httpd
 sudo systemctl enable mariadb
@@ -208,6 +220,11 @@ rm -rf wordpress
 echo -e "$green [+] Changing permissions$default"
 if [ -e "/etc/yum" ] ; then
 	sudo chown apache:apache $server_root/* -R 
+
+elif [ -e "/etc/apt" ] ; then
+	sudo chown www-data:www-data $server_root/* -R
+	local_user=`whoami`
+	sudo usermod -a -G www-data $local_user
 fi
 mv $server_root/index.html $server_root/index.html.orig
 
