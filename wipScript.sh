@@ -26,7 +26,7 @@ if [ -e "/etc/yum" ] ; then
 elif [ -e "/etc/yum" ]; then
 	yap="apt-get"
 else 
-	echo -e "$red [-] A not supported OS, exiting the script "
+	echo -e "$red [-] Your OS is not supported by this script, exiting the script "
 	exit 0
 fi
 
