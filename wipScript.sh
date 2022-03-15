@@ -53,24 +53,34 @@ sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
 sudo yum update ; yum upgrade
 
 echo -e "$green [+] Installing dependencies ' $default"
-sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-mysql php-1dap php-zip php-fileinfo php-fpm php-xml
+sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-1dap php-zip php-fileinfo php-fpm php-xml
+sudo yum --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
 sudo yum --enablerepo=remi -y install bind bind-utils 
 sudo yum --enablerepo=remi -y install epel-release
 sudo yum --enablerepo=remi -y install nano wget net-tools varnish rsync
-sudo yum --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot system-switch-mail system-switch-mail-gnome
+sudo yum --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot 
+
+## TODO system-switch-mail system-switch-mail-gnome
 
 sudo yum update ; yum upgrade
 echo -e "$green [+] Starting services ' $default"
-sudo systemctl start fail2ban
-sudo systemctl enable fail2ban 
-sudo systemctl start named.service
-sudo systemctl enable named.serivce
+
 sudo systemctl start httpd.service
 sudo systemctl enable httpd.service
 sudo systemctl start mariadb.service
 sudo systemctl enable mariadb.service
 sudo systemctl start varnish.service
 sudo systemctl enable varnish.service
+sudo systemctl start fail2ban
+sudo systemctl enable fail2ban 
+sudo systemctl start named
+sudo systemctl enable named
+
+sudo systemctl status fail2ban
+sudo systemctl status named.service
+sudo systemctl status mariadb.service
+sudo systemctl status varnish.service
+sudo systemctl status httpd.service
 
 echo -e "$green [+] Installing MySQL ' $default"
 sudo mysql_secure_installation
@@ -92,14 +102,27 @@ sudo rpm --import jcameron-key.asc
 sudo yum -y install webmin
 
 ## Mail server
+systemctl stop sendmail
+systemctl disable  sendmail 
 sudo yum -y remove sendmail*
+
 chkconfig --level 345 dovecot on
 
+sudo yum -y install postfix
+
+systemctl start postfix
+systemctl enable postfix
+
+chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+
+sudo firewall-cmd --permanent --zone=public --add-service=smtp
 sudo firewall-cmd --permanent --zone=public --add-service=http 
 sudo firewall-cmd --permanent --zone=public --add-service=https
 sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp 
 sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
 sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
+
 sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
