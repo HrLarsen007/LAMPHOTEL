@@ -22,9 +22,9 @@ default="\033[00m"
 if (( $my_id == "rhel" )) ; then
 
 	if (( $my_version == '7' || $my_version == '8' )) ; then
-		echo -e "$green [+] We are using an acceptable version of Rhel to use this script!' $default"
+		echo -e "$green [+] We are using an acceptable version of Rhel to use this script! $default"
 	else 
-		echo -e "$red [-] This script only supports version 7.x or 8.x of rhel ' $default"
+		echo -e "$red [-] This script only supports version 7.x or 8.x of rhel $default"
 		exit 0
 	fi
 else 
@@ -43,16 +43,19 @@ sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version
 sudo yum -y update
 sudo yum repolist
 sudo yum -y install yum-utils
-#sudo yum module -y reset php
-#sudo yum module -y install php:remi-5.6
-echo -e "$green [+] Installing remi's php5.6' $default"
-sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6]
-echo -e "$green [+] Installing php http mariadb ' $default"
+sudo yum module -y reset php
+sudo yum module -y install php:remi-8.1
+sudo yum -y update
+#echo -e "$green [+] Installing remi's php5.6 $default"
+#sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6]
+
+
+echo -e "$green [+] Installing php http mariadb $default"
 sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
 
 sudo yum -y update ; yum -y upgrade
 
-echo -e "$green [+] Installing dependencies ' $default"
+echo -e "$green [+] Installing dependencies $default"
 sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-1dap php-zip php-fileinfo php-fpm php-xml
 sudo yum --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
 sudo yum --enablerepo=remi -y install bind bind-utils 
@@ -82,7 +85,7 @@ sudo systemctl enable named
 #sudo systemctl status varnish.service
 #sudo systemctl status httpd.service
 
-echo -e "$green [+] Installing MySQL ' $default"
+echo -e "$green [+] Installing MySQL $default"
 sudo mysql_secure_installation
 
 touch /var/www/html/phpinfo.php && echo '<?php phpinfo(); ?>' >> /var/www/html/phpinfo.php 
@@ -183,7 +186,7 @@ echo -e "$green [+] Unpacking Wordpress$default"
 tar xpvf latest.tar.gz
 
 # Copying files to server root
-echo -e "$green [+] Copying files to $server_root"
+echo -e "$green [+] Copying files to $server_root $default"
 sudo rsync -avP wordpress/ $server_root
 
 
