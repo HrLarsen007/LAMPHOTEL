@@ -40,7 +40,7 @@ echo -e "$green [+] Installing epel $default"
 sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
 echo -e "$green [+] Installing remi $default"
 sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
-sudo yum update
+sudo yum -y update
 sudo yum repolist
 sudo yum -y install yum-utils
 #sudo yum module -y reset php
@@ -50,7 +50,7 @@ sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6]
 echo -e "$green [+] Installing php http mariadb ' $default"
 sudo yum --enablerepo=remi -y install php httpd mariadb-server mariadb
 
-sudo yum update ; yum upgrade
+sudo yum -y update ; yum -y upgrade
 
 echo -e "$green [+] Installing dependencies ' $default"
 sudo yum --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-1dap php-zip php-fileinfo php-fpm php-xml
@@ -76,11 +76,11 @@ sudo systemctl enable fail2ban
 sudo systemctl start named
 sudo systemctl enable named
 
-sudo systemctl status fail2ban
-sudo systemctl status named.service
-sudo systemctl status mariadb.service
-sudo systemctl status varnish.service
-sudo systemctl status httpd.service
+#sudo systemctl status fail2ban
+#sudo systemctl status named.service
+#sudo systemctl status mariadb.service
+#sudo systemctl status varnish.service
+#sudo systemctl status httpd.service
 
 echo -e "$green [+] Installing MySQL ' $default"
 sudo mysql_secure_installation
