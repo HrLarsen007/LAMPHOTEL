@@ -26,7 +26,7 @@ if [ -e "/etc/yum" ] ; then
 elif [ -e "/etc/yum" ]; then
 	yap="apt-get"
 else 
-	echo -e "$red [-] Your OS is not supported by this script, exiting the script "
+	echo -e "$red [-] Your OS is not supported by this script, exiting the script"
 	exit 0
 fi
 
@@ -39,13 +39,13 @@ if (( $my_id == "rhel" )) ; then
 		exit 0
 	fi
 else 
-	echo -e "$red [-] This script does not support $my_prettyname ' $default"
+	echo -e "$red [-] This script does not support $my_prettyname $default"
 	exit 0
 fi
 
 
 
-echo "\nSetting up LAMP-STACK with $my_prettyname dependcies\n"
+echo -e "$green [+] Setting up LAMP-STACK with $my_prettyname dependcies $default"
 sudo $yap update ; $yap upgrade ; $yap clean all
 echo -e "$green [+] Installing epel $default"
 sudo $yap -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
@@ -189,17 +189,10 @@ if [ -e "/etc/yum" ] ; then
 	sudo systemctl start httpd
 	sudo systemctl enable mariadb
 	sudo systemctl enable httpd
-	mysql_secure_installation
 elif [ -e "/etc/apt" ] ; then
 	sudo $yap -y install apache2 php8.1 php8.1-gd php8.1-mysql libapache2-mod-php8.1
 	sudo $yap -y install mysql-server libmysqlclient-dev
 fi
-
-sudo $yap install httpd php php-gd php-mysql php-xml mariadb-server mariadb
-sudo systemctl start mariadb
-sudo systemctl start httpd
-sudo systemctl enable mariadb
-sudo systemctl enable httpd
 
 # Downloading source
 echo -e "$green [+] Downloading Wordpress$default"
@@ -221,7 +214,6 @@ rm -rf wordpress
 echo -e "$green [+] Changing permissions$default"
 if [ -e "/etc/yum" ] ; then
 	sudo chown apache:apache $server_root/* -R 
-
 elif [ -e "/etc/apt" ] ; then
 	sudo chown www-data:www-data $server_root/* -R
 	local_user=`whoami`
