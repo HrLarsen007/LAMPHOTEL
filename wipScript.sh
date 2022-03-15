@@ -213,6 +213,7 @@ sudo rsync -avP wordpress/ $server_root
 
 
 #Cleaning up after myslef, since my mom isn't here!
+echo -e "$green [+] Removing latest.tar.gz wordpress from $server_root $default"
 rm -rf latest.tar.gz
 rm -rf wordpress
 
