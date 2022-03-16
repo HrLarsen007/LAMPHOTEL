@@ -162,6 +162,7 @@ sudo firewall-cmd --permanent --zone=public --add-service=https
 sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp 
 sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
 sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
+sudo firewall-cmd --permanent --zone=public --add-port=25/tcp
 sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
@@ -169,30 +170,6 @@ echo -e "$red UPDATE at Line 169! $default"
 sudo $yap update -y selinux-policy*
 
 
-
-:<<'END'
-# Setting up variables
-echo -e "$green [+] Updating Wordpress variables $default"
-dialog --title "Setting variables" --yesno "Use $server_root as server root?" 0 0
-if [ "$?" = "1" ] ; then
-	server_root=$( dialog --stdout --inputbox "Set server root:" 0 0 )
-fi
-
-dialog --title "Setting variables" --yesno "Set $database as WordPress Database?" 0 0
-if [ "$?" = "1" ] ; then
-	database=$( dialog --stdout --inputbox "Set WordPress DB name:" 0 0 )
-fi
-
-dialog --title "Setting variables" --yesno "Set $table as WordPress table prefix?" 0 0
-if [ "$?" = "1" ] ; then
-	table=$( dialog --stdout --inputbox "Set WordPress table prefix:" 0 0 )
-fi
-
-dialog --title "Setting variables" --yesno "Use $user as WordPress database username?" 0 0
-if [ "$?" = "1" ] ; then
-	user=$( dialog --stdout --inputbox "Set WordPress username:" 0 0 )
-fi
-END
 dialog --title "setting variables" --msgbox \
 "[Server Root] = $server_root \
 [Database name] = $database \
@@ -203,18 +180,7 @@ dialog --title "setting variables" --msgbox \
 
 # Installing and configuring dependencies according to each distro's package manager
 echo -e "$green [+] Installing and configuring dependencies $default"
-:<<'ENDO'
-if [ -e "/etc/yum" ] ; then
-	sudo $yap -y install httpd php php-gd php-mysql php-xml mariadb-server mariadb
-	sudo systemctl start mariadb
-	sudo systemctl start httpd
-	sudo systemctl enable mariadb
-	sudo systemctl enable httpd
-elif [ -e "/etc/apt" ] ; then
-	sudo $yap -y install apache2 php8.1 php8.1-gd php8.1-mysql libapache2-mod-php8.1
-	sudo $yap -y install mysql-server libmysqlclient-dev
-fi
-ENDO
+
 # Downloading source
 echo -e "$green [+] Downloading Wordpress$default"
 wget $wp_source
