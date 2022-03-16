@@ -12,16 +12,22 @@ my_id=$(echo $_my_id | awk '{print $1}')
 my_ip=`hostname -I`
 
 green="\033[32m"
+yellow="\u001b[33m"
 red="\033[31m"
 white="\e[0;37m"
 default="\033[00m"
 
 yap="none"
 
+
+echo  -e "\033[33;5;7;1;mLAMPSTACK\033[0m"
+
+
 # Variables -  wordpress Database + wordpress source
 server_root="/var/www/html"
 wp_source="https://wordpress.org/latest.tar.gz"
-user="wpuser"
+localuser="wpuser"
+remoteuser="hemliguser"
 database="wpdatabase"
 table="wp_"
 
@@ -50,38 +56,47 @@ fi
 
 
 
-echo -e "$green [+] Setting up LAMP-STACK with $my_prettyname dependcies $default"
-sudo $yap update ; $yap upgrade ; $yap clean all
-echo -e "$green [+] Installing epel $default"
-sudo $yap -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
-echo -e "$green [+] Installing remi $default"
-sudo $yap -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
-sudo $yap -y update
-sudo $yap repolist
-sudo $yap -y install $yap-utils
-echo -e "$green [+] Installing remi's php8.1 $default"
-sudo $yap module -y reset php
-sudo $yap module -y install php:remi-8.1
-sudo $yap -y update
 
 #sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6] Not working for EL or RHEL 8
 
 
-echo -e "$green [+] Installing php http mariadb $default"
-sudo $yap --enablerepo=remi -y install php httpd mariadb-server mariadb
-
-sudo $yap -y update ; $yap -y upgrade
-
-echo -e "$green [+] Installing dependencies $default"
-sudo $yap --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-1dap php-zip php-fileinfo php-fpm php-xml
-sudo $yap --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
-sudo $yap --enablerepo=remi -y install bind bind-utils 
-sudo $yap --enablerepo=remi -y install epel-release
-sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync
-sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
-sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot 
+echo -e "$green [+] Setting up LAMP-STACK with $my_prettyname dependcies $default"
+sudo $yap update ; $yap upgrade ; $yap clean all
 
 ## TODO system-switch-mail system-switch-mail-gnome
+echo -e "$green [+] Installing dependencies $default"
+if [ -e "/etc/yum" ] ; then
+	echo -e "$green [+] Installing epel $default"
+	sudo $yap -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
+	echo -e "$green [+] Installing remi $default"
+	sudo $yap -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
+	
+	sudo $yap -y update
+	sudo $yap repolist
+	sudo $yap -y install $yap-utils
+
+	echo -e "$green [+] Installing remi's php8.1 $default"
+	sudo $yap module -y reset php
+	sudo $yap module -y install php:remi-8.1
+	sudo $yap -y update
+	
+	echo -e "$green [+] Installing php http mariadb $default"
+	sudo $yap --enablerepo=remi -y install php httpd mariadb-server mariadb
+	sudo $yap --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-ldap php-zip php-fileinfo php-fpm php-xml
+	sudo $yap --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
+	sudo $yap --enablerepo=remi -y install epel-release
+	sudo $yap -y update ; $yap -y upgrade
+
+elif [ -e "/etc/apt" ] ; then
+	sudo $yap -y install apache2 php8.1 php8.1-gd php8.1-mysql libapache2-mod-php8.1
+	sudo $yap -y install mysql-server libmysqlclient-dev
+	sudo $yap -y update ; $yap -y upgrade
+fi
+
+sudo $yap --enablerepo=remi -y install bind bind-utils 
+sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync dialog
+sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
+sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot
 
 sudo $yap update ; $yap upgrade
 echo -e "$green [+] Starting services ' $default"
@@ -148,10 +163,9 @@ sudo systemctl restart httpd.service
 
 sudo $yap update -y selinux-policy*
 
-sudo $yap -y install dialog wget
 
 
-
+:<<'END'
 # Setting up variables
 echo -e "$green [+] Updating Wordpress variables $default"
 dialog --title "Setting variables" --yesno "Use $server_root as server root?" 0 0
@@ -173,17 +187,18 @@ dialog --title "Setting variables" --yesno "Use $user as WordPress database user
 if [ "$?" = "1" ] ; then
 	user=$( dialog --stdout --inputbox "Set WordPress username:" 0 0 )
 fi
-
+END
 dialog --title "setting variables" --msgbox \
 "[Server Root] = $server_root \
 [Database name] = $database \
 [Table prefix] = $table \
-[MySQL Username] = $user" 10 35 --and-widget
+[MySQL Local Username] = $localuser \ 
+[MySQL remote Username] = $remoteuser" 10 35 --and-widget
 
 
 # Installing and configuring dependencies according to each distro's package manager
 echo -e "$green [+] Installing and configuring dependencies $default"
-
+:<<'ENDO'
 if [ -e "/etc/yum" ] ; then
 	sudo $yap -y install httpd php php-gd php-mysql php-xml mariadb-server mariadb
 	sudo systemctl start mariadb
@@ -194,7 +209,7 @@ elif [ -e "/etc/apt" ] ; then
 	sudo $yap -y install apache2 php8.1 php8.1-gd php8.1-mysql libapache2-mod-php8.1
 	sudo $yap -y install mysql-server libmysqlclient-dev
 fi
-
+ENDO
 # Downloading source
 echo -e "$green [+] Downloading Wordpress$default"
 wget $wp_source
@@ -207,7 +222,7 @@ sudo rsync -avP wordpress/ $server_root
 
 
 #Cleaning up after myslef, since my mom isn't here!
-echo -e "$green [+] Removing latest.tar.gz wordpress from $server_root $default"
+echo -e "$green [+] Removing latest.tar.gz & wordpress from $server_root $default"
 rm -rf latest.tar.gz
 rm -rf wordpress
 
@@ -227,37 +242,24 @@ pass=$( dialog --stdout --inputbox "Type $user@localhost password" 0 0 )
 echo -e "$green [+] Type MySQL root password $default"
 
 
-#Creating local user for the database
-
-echo -e "$green [+] Creating Localhost user $default"
+#Creating local & remote user for the database
 
 Q1="CREATE DATABASE $database;"
 Q2="CREATE USER '$user'@'localhost' IDENTIFIED BY '$pass';"
-#Q3="SET PASSWORD FOR $user@localhost= PASSWORD('$pass');"
 Q3="GRANT ALL PRIVILEGES on $database.* TO $user@localhost;"
 Q4="FLUSH PRIVILEGES;"
-SQL=${Q1}${Q2}${Q3}${Q4}
+
+Q5="CREATE USER 'hemliguser'@'%' IDENTIFIED BY 'Kode1234!';"
+Q6="GRANT ALL PRIVILEGES ON $database.* TO 'hemliguser'@'%' WITH GRANT OPTION;"
+Q7="FLUSH PRIVILEGES;"
+
+SQL=${Q1}${Q2}${Q3}${Q4}${Q5}${Q6}${Q7}
 
 if `mysql -u root -p -e "$SQL"` ; then
-	echo -e "$green [+] Successfully added $user into the DB $database $default"
+	echo -e "$green [+] Successfully added $user & hemliguser into the DB $database $default"
 else
 	echo -e "$red [-] Invaild MySQL password $default"
 	echo -e "$green [+] Type MySQL root password $default"
-	`mysql -u root -p -e "$SQL"`
-fi
-
-
-echo -e "$green [+] Creating remote user $default"
-echo -e "$green [+] Type MySQL root password $default"
-Q1="CREATE USER 'hemliguser'@'%' IDENTIFIED BY 'Kode1234!';"
-Q2="GRANT ALL PRIVILEGES ON $database.* TO 'hemliguser'@'%' WITH GRANT OPTION;"
-Q3="FLUSH PRIVILEGES;"
-SQL=${Q1}${Q2}${Q3}
-if `mysql -u root -p -e "$SQL"` ; then
-	echo -e "$green [+] Successfully added secretuser into the DB $database $default"
-else
-	echo -e "$red [-] Invaild MySQL password $default"
-	echo -e "$red [-] Type MySQL root password again $default"
 	`mysql -u root -p -e "$SQL"`
 fi
 
@@ -273,3 +275,4 @@ echo -e "$green [+] Finishing / End of the script' $default"
 echo -e "$green [+] You LAMP stack is now up and running! $default"
 echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
 echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
+echo  -e "\033[33;5;7;1;mLAMPSTACK DONE\033[0m"
