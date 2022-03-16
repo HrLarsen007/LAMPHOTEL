@@ -20,7 +20,7 @@ default="\033[00m"
 yap="none"
 
 
-echo  -e "\033[33;5;7;1;mLAMPSTACK\033[0m"
+echo -e "\033[33;5;7;1mLAMPSTACK\033[0m"
 
 
 # Variables -  wordpress Database + wordpress source
@@ -99,8 +99,8 @@ sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay openssl unzip perl-E
 sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot
 
 sudo $yap update ; $yap upgrade
-echo -e "$green [+] Starting services ' $default"
 
+echo -e "$green [+] Starting services ' $default"
 sudo systemctl start httpd.service
 sudo systemctl enable httpd.service
 sudo systemctl start mariadb.service
@@ -193,7 +193,7 @@ dialog --title "setting variables" --msgbox \
 [Database name] = $database \
 [Table prefix] = $table \
 [MySQL Local Username] = $localuser \ 
-[MySQL remote Username] = $remoteuser" 10 35 --and-widget
+[MySQL remote Username] = $remoteuser " 10 35 --and-widget
 
 
 # Installing and configuring dependencies according to each distro's package manager
@@ -238,25 +238,24 @@ fi
 mv $server_root/index.html $server_root/index.html.orig
 
 # Configuring MySQL Database
-pass=$( dialog --stdout --inputbox "Type $user@localhost password" 0 0 )
+localpass=$( dialog --stdout --inputbox "Type $localuser@localhost password" 0 0 )
+remotepass=$( dialog --stdout --inputbox "Type $remoteuser password" 0 0 )
 echo -e "$green [+] Type MySQL root password $default"
-
-
 #Creating local & remote user for the database
 
 Q1="CREATE DATABASE $database;"
-Q2="CREATE USER '$user'@'localhost' IDENTIFIED BY '$pass';"
-Q3="GRANT ALL PRIVILEGES on $database.* TO $user@localhost;"
+Q2="CREATE USER $localuser@localhost IDENTIFIED BY $localpass;"
+Q3="GRANT ALL PRIVILEGES on $database.* TO $localuser@localhost;"
 Q4="FLUSH PRIVILEGES;"
 
-Q5="CREATE USER 'hemliguser'@'%' IDENTIFIED BY 'Kode1234!';"
-Q6="GRANT ALL PRIVILEGES ON $database.* TO 'hemliguser'@'%' WITH GRANT OPTION;"
+Q5="CREATE USER $remoteuser@% IDENTIFIED BY $remotepass;"
+Q6="GRANT ALL PRIVILEGES ON $database.* TO $remoteuser@% WITH GRANT OPTION;"
 Q7="FLUSH PRIVILEGES;"
 
 SQL=${Q1}${Q2}${Q3}${Q4}${Q5}${Q6}${Q7}
 
 if `mysql -u root -p -e "$SQL"` ; then
-	echo -e "$green [+] Successfully added $user & hemliguser into the DB $database $default"
+	echo -e "$green [+] Successfully added $localuser & $remoteuser into the DB $database $default"
 else
 	echo -e "$red [-] Invaild MySQL password $default"
 	echo -e "$green [+] Type MySQL root password $default"
@@ -267,12 +266,12 @@ echo -e "$green [+] Creating wp-config.php $default"
 # Generating wp-config.php file
 sudo cp $server_root/wp-config-sample.php $server_root/wp-config.php
 sudo sed -i "s/database_name_here/$database/g" $server_root/wp-config.php
-sudo sed -i "s/username_here/$user/g" $server_root/wp-config.php
-sudo sed -i "s/password_here/$pass/g" $server_root/wp-config.php
+sudo sed -i "s/username_here/$localuser/g" $server_root/wp-config.php
+sudo sed -i "s/password_here/$localpass/g" $server_root/wp-config.php
 sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
 
 echo -e "$green [+] Finishing / End of the script' $default"
 echo -e "$green [+] You LAMP stack is now up and running! $default"
 echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
 echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
-echo  -e "\033[33;5;7;1;mLAMPSTACK DONE\033[0m"
+echo -e "\033[33;5;7;1mLAMPSTACK DONE\033[0m"
