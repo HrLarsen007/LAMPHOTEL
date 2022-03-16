@@ -237,7 +237,14 @@ Q2="CREATE USER '$user'@'localhost' IDENTIFIED BY '$pass';"
 Q3="GRANT ALL PRIVILEGES on $database.* TO $user@localhost;"
 Q4="FLUSH PRIVILEGES;"
 SQL=${Q1}${Q2}${Q3}${Q4}
-`mysql -u root -p -e "$SQL"`
+
+if `mysql -u root -p -e "$SQL"` ; then
+	echo -e "$green [+] Successfully added $user into the DB $database $default"
+else
+	echo -e "$red [-] Invaild MySQL password $default"
+	echo -e "$green [+] Type MySQL root password $default"
+	`mysql -u root -p -e "$SQL"`
+fi
 
 
 echo -e "$green [+] Creating remote user $default"
@@ -246,7 +253,13 @@ Q1="CREATE USER 'hemliguser'@'%' IDENTIFIED BY 'Kode1234!';"
 Q2="GRANT ALL PRIVILEGES ON $database.* TO 'hemliguser'@'%' WITH GRANT OPTION;"
 Q3="FLUSH PRIVILEGES;"
 SQL=${Q1}${Q2}${Q3}
-`mysql -u root -p -e "$SQL"`
+if `mysql -u root -p -e "$SQL"` ; then
+	echo -e "$green [+] Successfully added secretuser into the DB $database $default"
+else
+	echo -e "$red [-] Invaild MySQL password $default"
+	echo -e "$green [+] Type MySQL root password $default"
+	`mysql -u root -p -e "$SQL"`
+fi
 
 echo -e "$green [+] Creating wp-config.php $default"
 # Generating wp-config.php file
@@ -257,4 +270,6 @@ sudo sed -i "s/password_here/$pass/g" $server_root/wp-config.php
 sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
 
 echo -e "$green [+] Finishing / End of the script' $default"
-echo -e "$green [+] You LAMP stack is now up and running!"
+echo -e "$green [+] You LAMP stack is now up and running! $default"
+echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
+echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
