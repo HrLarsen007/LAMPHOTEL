@@ -244,11 +244,11 @@ echo -e "$green [+] Type MySQL root password $default"
 #Creating local & remote user for the database
 
 Q1="CREATE DATABASE $database;"
-Q2="CREATE USER $localuser@localhost IDENTIFIED BY $localpass;"
+Q2="CREATE USER $localuser@localhost IDENTIFIED BY '$localpass';"
 Q3="GRANT ALL PRIVILEGES on $database.* TO $localuser@localhost;"
 Q4="FLUSH PRIVILEGES;"
 
-Q5="CREATE USER $remoteuser@% IDENTIFIED BY $remotepass;"
+Q5="CREATE USER $remoteuser@% IDENTIFIED BY '$remotepass';"
 Q6="GRANT ALL PRIVILEGES ON $database.* TO $remoteuser@% WITH GRANT OPTION;"
 Q7="FLUSH PRIVILEGES;"
 
