@@ -115,7 +115,7 @@ echo 'gpgcheck=1' >> /etc/yum.repos.d/webmin.repo
 
 sudo wget https://download.webmin.com/jcameron-key.asc
 sudo $yap -y update ; $yap -y upgrade 
-sudo $yap --import jcameron-key.asc
+sudo rpm --import jcameron-key.asc
 sudo $yap -y install webmin
 
 ## Mail server
