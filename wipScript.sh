@@ -61,6 +61,7 @@ fi
 
 
 echo -e "$green [+] Setting up LAMP-STACK with $my_prettyname dependcies $default"
+echo -e "$red UPDATE at Line 65! $default"
 sudo $yap update ; $yap upgrade ; $yap clean all
 
 ## TODO system-switch-mail system-switch-mail-gnome
@@ -70,7 +71,7 @@ if [ -e "/etc/yum" ] ; then
 	sudo $yap -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
 	echo -e "$green [+] Installing remi $default"
 	sudo $yap -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
-	
+	echo -e "$red UPDATE at Line 75! $default"
 	sudo $yap -y update
 	sudo $yap repolist
 	sudo $yap -y install $yap-utils
@@ -78,6 +79,7 @@ if [ -e "/etc/yum" ] ; then
 	echo -e "$green [+] Installing remi's php8.1 $default"
 	sudo $yap module -y reset php
 	sudo $yap module -y install php:remi-8.1
+	echo -e "$red UPDATE at Line 83! $default"
 	sudo $yap -y update
 	
 	echo -e "$green [+] Installing php http mariadb $default"
@@ -85,11 +87,13 @@ if [ -e "/etc/yum" ] ; then
 	sudo $yap --enablerepo=remi -y install php-mcrypt php-cli php-gd php-curl php-ldap php-zip php-fileinfo php-fpm php-xml
 	sudo $yap --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
 	sudo $yap --enablerepo=remi -y install epel-release
+	echo -e "$red UPDATE at Line 91! $default"
 	sudo $yap -y update ; $yap -y upgrade
 
 elif [ -e "/etc/apt" ] ; then
 	sudo $yap -y install apache2 php8.1 php8.1-gd php8.1-mysql libapache2-mod-php8.1
 	sudo $yap -y install mysql-server libmysqlclient-dev
+	echo -e "$red UPDATE at Line 97! $default"
 	sudo $yap -y update ; $yap -y upgrade
 fi
 
@@ -97,7 +101,7 @@ sudo $yap --enablerepo=remi -y install bind bind-utils
 sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync dialog
 sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
 sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot
-
+echo -e "$red UPDATE at Line 105! $default"
 sudo $yap update ; $yap upgrade
 
 echo -e "$green [+] Starting services ' $default"
@@ -129,6 +133,7 @@ echo 'gpgkey=https://download.webmin.com/jcameron-key.asc' >> /etc/yum.repos.d/w
 echo 'gpgcheck=1' >> /etc/yum.repos.d/webmin.repo
 
 sudo wget https://download.webmin.com/jcameron-key.asc
+echo -e "$red UPDATE at Line 137! $default"
 sudo $yap -y update ; $yap -y upgrade 
 sudo rpm --import jcameron-key.asc
 sudo $yap -y install webmin
@@ -160,7 +165,7 @@ sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
 sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
-
+echo -e "$red UPDATE at Line 169! $default"
 sudo $yap update -y selinux-policy*
 
 
@@ -248,8 +253,8 @@ Q2="CREATE USER $localuser@localhost IDENTIFIED BY '$localpass';"
 Q3="GRANT ALL PRIVILEGES on $database.* TO $localuser@localhost;"
 Q4="FLUSH PRIVILEGES;"
 
-Q5="CREATE USER $remoteuser@% IDENTIFIED BY '$remotepass';"
-Q6="GRANT ALL PRIVILEGES ON $database.* TO $remoteuser@% WITH GRANT OPTION;"
+Q5="CREATE USER $remoteuser@'%' IDENTIFIED BY $remotepass;"
+Q6="GRANT ALL PRIVILEGES ON $database.* TO $remoteuser@'%' WITH GRANT OPTION;"
 Q7="FLUSH PRIVILEGES;"
 
 SQL=${Q1}${Q2}${Q3}${Q4}${Q5}${Q6}${Q7}
