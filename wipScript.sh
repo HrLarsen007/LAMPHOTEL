@@ -9,7 +9,7 @@ _my_id=$(awk -F'=' '/ID/{ gsub(/"/,""); print $2}' /etc/os-release)
 my_version=${_my_version::1}
 my_prettyname=$_my_prettyname
 my_id=$(echo $_my_id | awk '{print $1}')
-my_ip=hostname -I
+my_ip=`hostname -I`
 
 green="\033[32m"
 red="\033[31m"
@@ -78,7 +78,7 @@ sudo $yap --enablerepo=remi -y install php-mysqlnd php-mbstring php-pdo php-opca
 sudo $yap --enablerepo=remi -y install bind bind-utils 
 sudo $yap --enablerepo=remi -y install epel-release
 sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync
-sudo $yap --enablerepo=remo -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
+sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
 sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot 
 
 ## TODO system-switch-mail system-switch-mail-gnome
@@ -257,7 +257,7 @@ if `mysql -u root -p -e "$SQL"` ; then
 	echo -e "$green [+] Successfully added secretuser into the DB $database $default"
 else
 	echo -e "$red [-] Invaild MySQL password $default"
-	echo -e "$green [+] Type MySQL root password $default"
+	echo -e "$red [-] Type MySQL root password again $default"
 	`mysql -u root -p -e "$SQL"`
 fi
 
