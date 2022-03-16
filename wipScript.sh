@@ -1,10 +1,6 @@
 #!/bin/bash
 ## Installing LAMP STACK
 
-
-
-
-
 _my_version=$(awk -F'=' '/VERSION_ID/{ gsub(/"/,""); print $2}' /etc/os-release)
 _my_name=$(awk -F'=' '/NAME/{ gsub(/"/,""); print $2}' /etc/os-release)
 _my_prettyname=$(awk -F'=' '/PRETTY_NAME/{ gsub(/"/,""); print $2}' /etc/os-release)
@@ -13,6 +9,7 @@ _my_id=$(awk -F'=' '/ID/{ gsub(/"/,""); print $2}' /etc/os-release)
 my_version=${_my_version::1}
 my_prettyname=$_my_prettyname
 my_id=$(echo $_my_id | awk '{print $1}')
+my_ip=hostname -I
 
 green="\033[32m"
 red="\033[31m"
@@ -21,12 +18,20 @@ default="\033[00m"
 
 yap="none"
 
+# Variables -  wordpress Database + wordpress source
+server_root="/var/www/html"
+wp_source="https://wordpress.org/latest.tar.gz"
+user="wpuser"
+database="wpdatabase"
+table="wp_"
+
+echo -e "$green [+] Checking your OS compatibility $default"
 if [ -e "/etc/yum" ] ; then
 	yap="yum"
 elif [ -e "/etc/yum" ]; then
 	yap="apt-get"
 else 
-	echo -e "$red [-] Your OS is not supported by this script, exiting the script"
+	echo -e "$red [-] You'r OS is not supported by this script, exiting the script"
 	exit 0
 fi
 
@@ -114,6 +119,7 @@ sudo $yap --import jcameron-key.asc
 sudo $yap -y install webmin
 
 ## Mail server
+echo -e "$green [+] Installing mail system (Postfix) $default"
 systemctl stop sendmail
 systemctl disable  sendmail 
 sudo $yap -y remove sendmail*
@@ -129,7 +135,7 @@ chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
 chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
 
 ## Creating firewall execptions
-
+echo -e "$green [+] Updating the firewall rule set to allow services $default"
 sudo firewall-cmd --permanent --zone=public --add-service=smtp
 sudo firewall-cmd --permanent --zone=public --add-service=http 
 sudo firewall-cmd --permanent --zone=public --add-service=https
@@ -145,14 +151,9 @@ sudo $yap update -y selinux-policy*
 sudo $yap -y install dialog wget
 
 
-# Starting script
-server_root="/var/www/html"
-wp_source="https://wordpress.org/latest.tar.gz"
-user="wpuser"
-database="wpdatabase"
-table="wp_"
 
 # Setting up variables
+echo -e "$green [+] Updating Wordpress variables $default"
 dialog --title "Setting variables" --yesno "Use $server_root as server root?" 0 0
 if [ "$?" = "1" ] ; then
 	server_root=$( dialog --stdout --inputbox "Set server root:" 0 0 )
@@ -226,15 +227,28 @@ pass=$( dialog --stdout --inputbox "Type $user@localhost password" 0 0 )
 echo -e "$green [+] Type MySQL root password $default"
 
 
-Q1="CREATE DATABASE $database;"
-Q2="CREATE USER $user@localhost;"
-Q3="SET PASSWORD FOR $user@localhost= PASSWORD('$pass');"
-Q4="GRANT ALL PRIVILEGES on $database.* TO $user@localhost;"
-Q5="FLUSH PRIVILEGES;"
-SQL=${Q1}${Q2}${Q3}${Q4}${Q5}
+#Creating local user for the database
 
+echo -e "$green [+] Creating Localhost user $default"
+
+Q1="CREATE DATABASE $database;"
+Q2="CREATE USER '$user'@'localhost' IDENTIFIED BY '$pass';"
+#Q3="SET PASSWORD FOR $user@localhost= PASSWORD('$pass');"
+Q3="GRANT ALL PRIVILEGES on $database.* TO $user@localhost;"
+Q4="FLUSH PRIVILEGES;"
+SQL=${Q1}${Q2}${Q3}${Q4}
 `mysql -u root -p -e "$SQL"`
 
+
+echo -e "$green [+] Creating remote user $default"
+echo -e "$green [+] Type MySQL root password $default"
+Q1="CREATE USER 'hemliguser'@'%' IDENTIFIED BY 'Kode1234!';"
+Q2="GRANT ALL PRIVILEGES ON $database.* TO 'hemliguser'@'%' WITH GRANT OPTION;"
+Q3="FLUSH PRIVILEGES;"
+SQL=${Q1}${Q2}${Q3}
+`mysql -u root -p -e "$SQL"`
+
+echo -e "$green [+] Creating wp-config.php $default"
 # Generating wp-config.php file
 sudo cp $server_root/wp-config-sample.php $server_root/wp-config.php
 sudo sed -i "s/database_name_here/$database/g" $server_root/wp-config.php
@@ -243,3 +257,4 @@ sudo sed -i "s/password_here/$pass/g" $server_root/wp-config.php
 sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
 
 echo -e "$green [+] Finishing / End of the script' $default"
+echo -e "$green [+] You LAMP stack is now up and running!"
