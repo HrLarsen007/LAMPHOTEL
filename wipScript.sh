@@ -1,4 +1,6 @@
 #!/bin/bash
+
+echo -e "\033[33;5;7;1mLAMPSTACK\033[0m"
 ## Installing LAMP STACK
 
 _my_version=$(awk -F'=' '/VERSION_ID/{ gsub(/"/,""); print $2}' /etc/os-release)
@@ -19,8 +21,6 @@ default="\033[00m"
 
 yap="none"
 
-
-echo -e "\033[33;5;7;1mLAMPSTACK\033[0m"
 
 
 # Variables -  wordpress Database + wordpress source
@@ -99,10 +99,11 @@ fi
 hostnamectl set-hostname mbitch 
 sudo $yap --enablerepo=remi -y install bind bind-utils 
 sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync dialog
-sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
+sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay unzip perl-Encode-Detect perl-Data-Dumper
 sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot
 #Packages required for AD join!
 sudo $yap --enablerepo=remi -y install realmd sssd oddjob oddjob-mkhomedir adcli samba-common samba-common-tools krb5-workstation authselect-compat
+sudo $yap --enablerepo=remi -y install vsftpd openssl
 echo -e "$red UPDATE at Line 107! $default"
 sudo $yap update ; $yap upgrade
 
@@ -168,12 +169,15 @@ systemctl enable postfix
 
 ## Creating firewall execptions
 echo -e "$green [+] Updating the firewall rule set to allow services $default"
-sudo firewall-cmd --permanent --zone=public --add-service=smtp
-sudo firewall-cmd --permanent --zone=public --add-service=http 
-sudo firewall-cmd --permanent --zone=public --add-service=https
-sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp 
-sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
+sudo firewall-cmd --permanent --zone=public --add-service=smtp ## Mail Service
+sudo firewall-cmd --permanent --zone=public --add-service=http  ##Apache
+sudo firewall-cmd --permanent --zone=public --add-service=https ##Secure Apache
+sudo firewall-cmd --zone=public --permanent --add-service=ftp ## FTP Service
+sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp ##Webmin
+sudo firewall-cmd --permanent --zone=public --add-port=10100-10200/tcp ## Passive Ports 
+sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp ##Databse (mariadb)
 sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
+
 sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
@@ -254,6 +258,48 @@ sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
 
 echo -e "$green [+] Finishing / End of the script' $default"
 echo -e "$green [+] You LAMP stack is now up and running! $default"
+
+#Installing FTP
+
+mv /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf_orig
+touch /etc/vsftpd/vsftpd.conf
+echo 'anonymous_enable=NO' >> /etc/vsftpd/vsftpd.conf
+echo 'local_enable=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'write_enable=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'local_umask=022' >> /etc/vsftpd/vsftpd.conf
+echo 'dirmessage_enable=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'xferlog_enable=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'connect_from_port_20=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'xferlog_std_format=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'listen=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'listen_ipv6=NO' >> /etc/vsftpd/vsftpd.conf
+echo 'pam_service_name=vsftpd' >> /etc/vsftpd/vsftpd.conf
+echo 'userlist_enable=YES' >> /etc/vsftpd/vsftpd.conf
+
+systemctl start vsftpd
+systemctl enable vsftpd
+
+sudo openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/vsftpd.key -x509 -days 365 -out /etc/pki/tls/certs/vsftpd.crt
+
+echo 'rsa_cert_file=/etc/pki/tls/certs/vsftpd.crt' >> /etc/vsftpd/vsftpd.conf
+echo 'rsa_private_key_file=/etc/pki/tls/private/vsftpd.key' >> /etc/vsftpd/vsftpd.conf
+echo 'ssl_enable=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'allow_anon_ssl=NO' >> /etc/vsftpd/vsftpd.conf
+echo 'force_local_data_ssl=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'force_local_logins_ssl=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'ssl_tlsv1=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'ssl_sslv2=NO' >> /etc/vsftpd/vsftpd.conf
+echo 'ssl_sslv3=NO' >> /etc/vsftpd/vsftpd.conf
+echo 'require_ssl_reuse=NO' >> /etc/vsftpd/vsftpd.conf
+echo 'ssl_ciphers=HIGH' >> /etc/vsftpd/vsftpd.conf
+echo 'pasv_enable=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'pasv_min_port=10100' >> /etc/vsftpd/vsftpd.conf
+echo 'pasv_max_port=10200' >> /etc/vsftpd/vsftpd.conf
+echo 'anonymous_enable=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'allow_anon_ssl=YES' >> /etc/vsftpd/vsftpd.conf
+
+systemctl restart vsftpd
+
 echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
 echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
 echo -e "\033[33;5;7;1mLAMPSTACK DONE\033[0m"
