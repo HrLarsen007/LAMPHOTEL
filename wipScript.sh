@@ -110,7 +110,7 @@ sudo $yap update ; $yap upgrade
 sudo subscription-manager register
 sudo subscription-manager attach --auto
 
-echo 'Kode1234!' | realm join slapaf.slapaf -U Administrator 
+realm join slapaf.slapaf -U Administrator 
 
 echo -e "$green [+] Starting services $default"
 sudo systemctl start httpd.service
