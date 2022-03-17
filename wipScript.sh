@@ -62,7 +62,7 @@ fi
 
 echo -e "$green [+] Setting up LAMP-STACK with $my_prettyname dependcies $default"
 echo -e "$red UPDATE at Line 65! $default"
-sudo $yap update ; $yap upgrade ; $yap clean all
+sudo $yap -y update ; $yap -y upgrade ; $yap -y clean all
 
 ## TODO system-switch-mail system-switch-mail-gnome
 echo -e "$green [+] Installing dependencies $default"
@@ -107,7 +107,7 @@ echo -e "$red UPDATE at Line 107! $default"
 sudo $yap update ; $yap upgrade
 
 #AD Section
-sudo subscription-manager register -y
+sudo subscription-manager register
 sudo subscription-manager attach --auto
 
 realm join slapaf.slapaf -U Administrator 
