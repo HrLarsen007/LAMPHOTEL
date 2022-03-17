@@ -263,7 +263,7 @@ echo -e "$green [+] You LAMP stack is now up and running! $default"
 
 mv /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf_orig
 touch /etc/vsftpd/vsftpd.conf
-echo 'anonymous_enable=NO' >> /etc/vsftpd/vsftpd.conf
+echo 'anonymous_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'local_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'write_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'local_umask=022' >> /etc/vsftpd/vsftpd.conf
@@ -284,7 +284,6 @@ sudo openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/vsftpd.key
 echo 'rsa_cert_file=/etc/pki/tls/certs/vsftpd.crt' >> /etc/vsftpd/vsftpd.conf
 echo 'rsa_private_key_file=/etc/pki/tls/private/vsftpd.key' >> /etc/vsftpd/vsftpd.conf
 echo 'ssl_enable=YES' >> /etc/vsftpd/vsftpd.conf
-echo 'allow_anon_ssl=NO' >> /etc/vsftpd/vsftpd.conf
 echo 'force_local_data_ssl=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'force_local_logins_ssl=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'ssl_tlsv1=YES' >> /etc/vsftpd/vsftpd.conf
@@ -295,11 +294,12 @@ echo 'ssl_ciphers=HIGH' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_min_port=10100' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_max_port=10200' >> /etc/vsftpd/vsftpd.conf
-echo 'anonymous_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'allow_anon_ssl=YES' >> /etc/vsftpd/vsftpd.conf
 
 systemctl restart vsftpd
 
+sudo adduser -d /home/ftpuser/ -s /bin/bash -g FTP ftpuser
+sudo passwd ftpuser
 echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
 echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
 echo -e "\033[33;5;7;1mLAMPSTACK DONE\033[0m"
