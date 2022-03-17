@@ -96,7 +96,7 @@ elif [ -e "/etc/apt" ] ; then
 	echo -e "$red UPDATE at Line 97! $default"
 	sudo $yap -y update ; $yap -y upgrade
 fi
-
+hostnamectl set-hostname mbitch 
 sudo $yap --enablerepo=remi -y install bind bind-utils 
 sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync dialog
 sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
