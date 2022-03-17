@@ -107,7 +107,7 @@ echo -e "$red UPDATE at Line 107! $default"
 sudo $yap update ; $yap upgrade
 
 #AD Section
-sudo subscription-manager register
+sudo subscription-manager register -y
 sudo subscription-manager attach --auto
 
 realm join slapaf.slapaf -U Administrator 
