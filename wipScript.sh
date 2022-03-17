@@ -101,10 +101,18 @@ sudo $yap --enablerepo=remi -y install bind bind-utils
 sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync dialog
 sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay openssl unzip perl-Encode-Detect perl-Data-Dumper
 sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot
-echo -e "$red UPDATE at Line 105! $default"
+#Packages required for AD join!
+sudo $yap --enablerepo=remi -y install realmd sssd oddjob oddjob-mkhomedir adcli samba-common samba-common-tools krb5-workstation authselect-compat
+echo -e "$red UPDATE at Line 107! $default"
 sudo $yap update ; $yap upgrade
 
-echo -e "$green [+] Starting services ' $default"
+#AD Section
+sudo subscription-manager register
+sudo subscription-manager attach --auto
+
+echo 'Kode1234!' | realm join slapaf.slapaf -U Administrator 
+
+echo -e "$green [+] Starting services $default"
 sudo systemctl start httpd.service
 sudo systemctl enable httpd.service
 sudo systemctl start mariadb.service
@@ -140,19 +148,23 @@ sudo $yap -y install webmin
 
 ## Mail server
 echo -e "$green [+] Installing mail system (Postfix) $default"
-systemctl stop sendmail
-systemctl disable  sendmail 
-sudo $yap -y remove sendmail*
+
+if [ -e "/etc/sendmail" ] ; then
+	systemctl stop sendmail
+	systemctl disable  sendmail 
+	sudo $yap -y remove sendmail*
+fi
+
+# Installing postfix as our new mail service
 
 chkconfig --level 345 dovecot on
-
 sudo $yap -y install postfix
 
 systemctl start postfix
 systemctl enable postfix
 
-chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
-chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+##chown root:root /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
+##chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
 
 ## Creating firewall execptions
 echo -e "$green [+] Updating the firewall rule set to allow services $default"
@@ -162,11 +174,10 @@ sudo firewall-cmd --permanent --zone=public --add-service=https
 sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp 
 sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp
 sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
-sudo firewall-cmd --permanent --zone=public --add-port=25/tcp
 sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
-echo -e "$red UPDATE at Line 169! $default"
+echo -e "$red UPDATE at Line 173! $default"
 sudo $yap update -y selinux-policy*
 
 
@@ -219,8 +230,8 @@ Q2="CREATE USER $localuser@'localhost' IDENTIFIED BY '$localpass';"
 Q3="GRANT ALL PRIVILEGES on $database.* TO $localuser@localhost;"
 Q4="FLUSH PRIVILEGES;"
 
-Q5="CREATE USER $remoteuser@'%' IDENTIFIED BY '$remotepass';"
-Q6="GRANT ALL PRIVILEGES ON $database.* TO $remoteuser@'%' WITH GRANT OPTION;"
+Q5="CREATE USER $remoteuser@'192.168.123.%' IDENTIFIED BY '$remotepass';"
+Q6="GRANT ALL PRIVILEGES ON $database.* TO $remoteuser@'192.168.123.%' WITH GRANT OPTION;"
 Q7="FLUSH PRIVILEGES;"
 
 SQL=${Q1}${Q2}${Q3}${Q4}${Q5}${Q6}${Q7}
