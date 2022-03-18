@@ -306,13 +306,12 @@ systemctl restart vsftpd
 sudo groupadd FTP
 sudo adduser -d /home/ftpuser/ -s /bin/bash -g FTP ftpuser
 sudo passwd ftpuser
-usermod --home /home/ftpuser/ ftpuser
 sudo chmod 701 /home
 sudo chmod 750 /home/ftpuser/
 
 echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
 echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
 echo -e "$green [+] you access SFTP https://localhost:22 as root or https://$my_ip:22 as ftpuser$default"
-echo -e "\33[32;5;7;1mLAMPSTACK DONE\33[0m"
+echo -e "\33[33;5;7;1mLAMPSTACK DONE\33[0m"
 
 ## Script is finished no more todo!
