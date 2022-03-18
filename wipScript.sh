@@ -303,7 +303,7 @@ echo 'allow_anon_ssl=YES' >> /etc/vsftpd/vsftpd.conf
 systemctl start vsftpd
 systemctl enable vsftpd
 systemctl restart vsftpd
-
+sudo groupadd FTP
 sudo adduser -d /home/ftpuser/ -s /bin/bash -g FTP ftpuser
 sudo passwd ftpuser
 usermod --home /home/ftpuser/ ftpuser
