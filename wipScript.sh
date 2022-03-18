@@ -1,8 +1,14 @@
 #!/bin/bash
 
-echo -e "\033[33;5;7;1mLAMPSTACK\033[0m"
-## Installing LAMP STACK
+## Install Web-hotel projekt
+##
+##  Mort99j4@ZBC.dk
+##  Version 1.2a
+## Inspired version of Suna@zbc.dk Web-Hotel script
 
+echo -e "\033[32;5;7;1mLAMPSTACK\033[0m"
+
+## Gathering information about our OS system
 _my_version=$(awk -F'=' '/VERSION_ID/{ gsub(/"/,""); print $2}' /etc/os-release)
 _my_name=$(awk -F'=' '/NAME/{ gsub(/"/,""); print $2}' /etc/os-release)
 _my_prettyname=$(awk -F'=' '/PRETTY_NAME/{ gsub(/"/,""); print $2}' /etc/os-release)
@@ -13,17 +19,25 @@ my_prettyname=$_my_prettyname
 my_id=$(echo $_my_id | awk '{print $1}')
 my_ip=`hostname -I`
 
+
+## Defining color codes for text
 green="\033[32m"
 yellow="\u001b[33m"
 red="\033[31m"
 white="\e[0;37m"
 default="\033[00m"
 
+## Defining a variable to be used instead of yum or apt-get.
 yap="none"
+domainHostName="mbitch"
+domainRealm="slapaf.slapaf"
+domainAccount="Administrator"
+
+defaultPass="Kode1234!"
 
 
 
-# Variables -  wordpress Database + wordpress source
+## Defining variables for our wordpress and it's database
 server_root="/var/www/html"
 wp_source="https://wordpress.org/latest.tar.gz"
 localuser="wpuser"
@@ -31,6 +45,7 @@ remoteuser="hemliguser"
 database="wpdatabase"
 table="wp_"
 
+## Declaring our yap variable's value to be compatiable with the OS we are running
 echo -e "$green [+] Checking your OS compatibility $default"
 if [ -e "/etc/yum" ] ; then
 	yap="yum"
@@ -41,6 +56,7 @@ else
 	exit 0
 fi
 
+## Checking if the user's OS system is supported by our script.
 if (( $my_id == "rhel" )) ; then
 
 	if (( $my_version == '7' || $my_version == '8' )) ; then
@@ -55,16 +71,14 @@ else
 fi
 
 
-
-
 #sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6] Not working for EL or RHEL 8
 
 
 echo -e "$green [+] Setting up LAMP-STACK with $my_prettyname dependcies $default"
-echo -e "$red UPDATE at Line 65! $default"
 sudo $yap -y update ; $yap -y upgrade ; $yap -y clean all
 
 ## TODO system-switch-mail system-switch-mail-gnome
+## Installing all the necessary packages for the required services
 echo -e "$green [+] Installing dependencies $default"
 if [ -e "/etc/yum" ] ; then
 	echo -e "$green [+] Installing epel $default"
@@ -96,23 +110,26 @@ elif [ -e "/etc/apt" ] ; then
 	echo -e "$red UPDATE at Line 97! $default"
 	sudo $yap -y update ; $yap -y upgrade
 fi
-hostnamectl set-hostname mbitch 
 sudo $yap --enablerepo=remi -y install bind bind-utils 
 sudo $yap --enablerepo=remi -y install nano wget net-tools varnish rsync dialog
 sudo $yap --enablerepo=remi -y install perl perl-Net-SSLeay unzip perl-Encode-Detect perl-Data-Dumper
 sudo $yap --enablerepo=remi -y install fail2ban fail2ban-systemd postfix dovecot
-#Packages required for AD join!
+
+##Packages required for AD join!
 sudo $yap --enablerepo=remi -y install realmd sssd oddjob oddjob-mkhomedir adcli samba-common samba-common-tools krb5-workstation authselect-compat
 sudo $yap --enablerepo=remi -y install vsftpd openssl
 echo -e "$red UPDATE at Line 107! $default"
 sudo $yap update ; $yap upgrade
 
-#AD Section
+## AD subscription setup
 sudo subscription-manager register
 sudo subscription-manager attach --auto
 
-echo 'Kode1234!' |realm join slapaf.slapaf -U Administrator 
+## Assigning the unit to the domain
+hostnamectl set-hostname $domainHostName
+echo '$defaultPass' | realm join $domainRealm -U $domainAccount
 
+## Staring and enabling the required services for our porject
 echo -e "$green [+] Starting services $default"
 sudo systemctl start httpd.service
 sudo systemctl enable httpd.service
@@ -128,10 +145,10 @@ sudo systemctl enable named
 echo -e "$green [+] Installing MySQL $default"
 sudo mysql_secure_installation
 
-##Setting up php test site
+##Setting up a php test site
 touch /var/www/html/phpinfo.php && echo '<?php phpinfo(); ?>' >> /var/www/html/phpinfo.php 
 
-#Setting up Webmin repo information
+##Setting up Webmin repo information
 touch /etc/yum.repos.d/webmin.repo && 
 echo '[Webmin]' >> /etc/yum.repos.d/webmin.repo
 echo 'name=Webmin Distribution Neutral' >> /etc/yum.repos.d/webmin.repo
@@ -147,7 +164,7 @@ sudo $yap -y update ; $yap -y upgrade
 sudo rpm --import jcameron-key.asc
 sudo $yap -y install webmin
 
-## Mail server
+## Setting up the mail service Postfix
 echo -e "$green [+] Installing mail system (Postfix) $default"
 
 if [ -e "/etc/sendmail" ] ; then
@@ -155,8 +172,6 @@ if [ -e "/etc/sendmail" ] ; then
 	systemctl disable  sendmail 
 	sudo $yap -y remove sendmail*
 fi
-
-# Installing postfix as our new mail service
 
 chkconfig --level 345 dovecot on
 sudo $yap -y install postfix
@@ -172,19 +187,18 @@ echo -e "$green [+] Updating the firewall rule set to allow services $default"
 sudo firewall-cmd --permanent --zone=public --add-service=smtp ## Mail Service
 sudo firewall-cmd --permanent --zone=public --add-service=http  ##Apache
 sudo firewall-cmd --permanent --zone=public --add-service=https ##Secure Apache
-sudo firewall-cmd --zone=public --permanent --add-service=ftp ## FTP Service
+sudo firewall-cmd --permanent --zone=public --add-service=ftp ## FTP Service
 sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp ##Webmin
 sudo firewall-cmd --permanent --zone=public --add-port=10100-10200/tcp ## Passive Ports 
 sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp ##Databse (mariadb)
 sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
-
 sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
 echo -e "$red UPDATE at Line 173! $default"
 sudo $yap update -y selinux-policy*
 
-
+## Confirming the given vaules to wordpress with the user.
 dialog --title "setting variables" --msgbox \
 "[Server Root] = $server_root \
 [Database name] = $database \
@@ -193,26 +207,23 @@ dialog --title "setting variables" --msgbox \
 [MySQL remote Username] = $remoteuser " 10 35 --and-widget
 
 
-# Installing and configuring dependencies according to each distro's package manager
-echo -e "$green [+] Installing and configuring dependencies $default"
-
-# Downloading source
+# Downloading Wordpress
 echo -e "$green [+] Downloading Wordpress$default"
 wget $wp_source
 echo -e "$green [+] Unpacking Wordpress$default"
 tar xpvf latest.tar.gz
 
-# Copying files to server root
+## Copying the wordpress files, to server root
 echo -e "$green [+] Copying files to $server_root $default"
 sudo rsync -avP wordpress/ $server_root
 
 
-#Cleaning up after myslef, since my mom isn't here!
+## Cleaning up the previous downloaded elements, since mom ain't here to do it for me
 echo -e "$green [+] Removing latest.tar.gz & wordpress from $server_root $default"
 rm -rf latest.tar.gz
 rm -rf wordpress
 
-# Setting up permissions
+## Assigning permission to our apache service
 echo -e "$green [+] Changing permissions$default"
 if [ -e "/etc/yum" ] ; then
 	sudo chown apache:apache $server_root/* -R 
@@ -223,11 +234,10 @@ elif [ -e "/etc/apt" ] ; then
 fi
 mv $server_root/index.html $server_root/index.html.orig
 
-# Configuring MySQL Database
+## Setting up our database with a lcoal and a remote user
 localpass=$( dialog --stdout --inputbox "Type $localuser@localhost password" 0 0 )
 remotepass=$( dialog --stdout --inputbox "Type $remoteuser password" 0 0 )
 echo -e "$green [+] Type MySQL root password $default"
-#Creating local & remote user for the database
 
 Q1="CREATE DATABASE $database;"
 Q2="CREATE USER $localuser@'localhost' IDENTIFIED BY '$localpass';"
@@ -249,7 +259,7 @@ else
 fi
 
 echo -e "$green [+] Creating wp-config.php $default"
-# Generating wp-config.php file
+## Creating the wp-config.php
 sudo cp $server_root/wp-config-sample.php $server_root/wp-config.php
 sudo sed -i "s/database_name_here/$database/g" $server_root/wp-config.php
 sudo sed -i "s/username_here/$localuser/g" $server_root/wp-config.php
@@ -259,8 +269,8 @@ sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
 echo -e "$green [+] Finishing / End of the script' $default"
 echo -e "$green [+] You LAMP stack is now up and running! $default"
 
-#Installing FTP
-
+## Setting up SFTP service with remote user
+sudo openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/vsftpd.key -x509 -days 365 -out /etc/pki/tls/certs/vsftpd.crt
 mv /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf_orig
 touch /etc/vsftpd/vsftpd.conf
 echo 'anonymous_enable=YES' >> /etc/vsftpd/vsftpd.conf
@@ -275,12 +285,6 @@ echo 'listen=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'listen_ipv6=NO' >> /etc/vsftpd/vsftpd.conf
 echo 'pam_service_name=vsftpd' >> /etc/vsftpd/vsftpd.conf
 echo 'userlist_enable=YES' >> /etc/vsftpd/vsftpd.conf
-
-systemctl start vsftpd
-systemctl enable vsftpd
-
-sudo openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/vsftpd.key -x509 -days 365 -out /etc/pki/tls/certs/vsftpd.crt
-
 echo 'rsa_cert_file=/etc/pki/tls/certs/vsftpd.crt' >> /etc/vsftpd/vsftpd.conf
 echo 'rsa_private_key_file=/etc/pki/tls/private/vsftpd.key' >> /etc/vsftpd/vsftpd.conf
 echo 'ssl_enable=YES' >> /etc/vsftpd/vsftpd.conf
@@ -296,10 +300,19 @@ echo 'pasv_min_port=10100' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_max_port=10200' >> /etc/vsftpd/vsftpd.conf
 echo 'allow_anon_ssl=YES' >> /etc/vsftpd/vsftpd.conf
 
+systemctl start vsftpd
+systemctl enable vsftpd
 systemctl restart vsftpd
 
 sudo adduser -d /home/ftpuser/ -s /bin/bash -g FTP ftpuser
 sudo passwd ftpuser
+usermod --home /home/ftpuser/ ftpuser
+sudo chmod 701 /home
+sudo chmod 750 /home/ftpuser/
+
 echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
 echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
-echo -e "\033[33;5;7;1mLAMPSTACK DONE\033[0m"
+echo -e "$green [+] you access SFTP https://localhost:22 as root or https://$my_ip:22 as ftpuser$default"
+echo -e "\33[32;5;7;1mLAMPSTACK DONE\33[0m"
+
+## Script is finished no more todo!
