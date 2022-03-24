@@ -6,6 +6,8 @@
 ##  Version 1.2a
 ## Inspired version of Suna@zbc.dk Web-Hotel script
 
+## host myip.opendns.com resolver1.opendns.com | grep "myip.opendns.com has" | awk '{print $4}'
+
 echo -e "\033[32;5;7;1mLAMPSTACK\033[0m"
 
 ## Gathering information about our OS system
@@ -72,9 +74,6 @@ fi
 
 #sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6] Not working for EL or RHEL 8
 
-## AD subscription setup
-sudo subscription-manager register
-sudo subscription-manager attach --auto
 
 echo -e "$green [+] Setting up LAMP-STACK with $my_prettyname dependcies $default"
 sudo $yap -y update ; $yap -y upgrade ; $yap -y clean all
@@ -123,6 +122,9 @@ sudo $yap --enablerepo=remi -y install vsftpd openssl
 echo -e "$red UPDATE at Line 107! $default"
 sudo $yap update ; $yap upgrade
 
+## AD subscription setup
+sudo subscription-manager register
+sudo subscription-manager attach --auto
 
 ## Assigning the unit to the domain
 ##hostnamectl set-hostname $domainHostName
