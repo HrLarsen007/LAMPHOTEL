@@ -6,7 +6,7 @@
 ##  Version 1.2a
 ## Inspired version of Suna@zbc.dk Web-Hotel script
 
-echo -e "\33[32;5;7;1mLAMPSTACK\033[0m"
+echo -e "\033[32;5;7;1mLAMPSTACK\033[0m"
 
 ## Gathering information about our OS system
 _my_version=$(awk -F'=' '/VERSION_ID/{ gsub(/"/,""); print $2}' /etc/os-release)
@@ -72,6 +72,9 @@ fi
 
 #sudo yum-config-manager -y --enable remi-php56  # [Install PHP 5.6] Not working for EL or RHEL 8
 
+## AD subscription setup
+sudo subscription-manager register
+sudo subscription-manager attach --auto
 
 echo -e "$green [+] Setting up LAMP-STACK with $my_prettyname dependcies $default"
 sudo $yap -y update ; $yap -y upgrade ; $yap -y clean all
@@ -120,13 +123,10 @@ sudo $yap --enablerepo=remi -y install vsftpd openssl
 echo -e "$red UPDATE at Line 107! $default"
 sudo $yap update ; $yap upgrade
 
-## AD subscription setup
-sudo subscription-manager register
-sudo subscription-manager attach --auto
 
 ## Assigning the unit to the domain
-hostnamectl set-hostname $domainHostName
-echo '$defaultPass' | realm join $domainRealm -U $domainAccount
+##hostnamectl set-hostname $domainHostName
+##echo '$defaultPass' | realm join $domainRealm -U $domainAccount
 
 ## Staring and enabling the required services for our porject
 echo -e "$green [+] Starting services $default"
@@ -311,6 +311,6 @@ sudo chmod 750 /home/ftpuser/
 echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
 echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
 echo -e "$green [+] you access SFTP https://localhost:22 as root or https://$my_ip:22 as ftpuser$default"
-echo -e "\33[33;5;7;1mLAMPSTACK DONE\33[0m"
+echo -e "\033[33;5;7;1mLAMPSTACK DONE\033[0m"
 
 ## Script is finished no more todo!
