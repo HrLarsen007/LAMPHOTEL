@@ -6,7 +6,7 @@
 ##  Version 1.2a
 ## Inspired version of Suna@zbc.dk Web-Hotel script
 
-echo -e "\033[32;5;7;1mLAMPSTACK\033[0m"
+echo -e "\33[32;5;7;1mLAMPSTACK\033[0m"
 
 ## Gathering information about our OS system
 _my_version=$(awk -F'=' '/VERSION_ID/{ gsub(/"/,""); print $2}' /etc/os-release)
@@ -32,7 +32,6 @@ yap="none"
 domainHostName="mbitch"
 domainRealm="slapaf.slapaf"
 domainAccount="Administrator"
-
 defaultPass="Kode1234!"
 
 
