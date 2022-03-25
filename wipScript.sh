@@ -125,8 +125,8 @@ sudo subscription-manager register
 sudo subscription-manager attach --auto
 
 ## Assigning the unit to the domain
-hostnamectl set-hostname $domainHostName
-echo '$defaultPass' | realm join $domainRealm -U $domainAccount
+#hostnamectl set-hostname $domainHostName
+#echo '$defaultPass' | realm join $domainRealm -U $domainAccount
 
 ## Staring and enabling the required services for our porject
 echo -e "$green [+] Starting services $default"
