@@ -2,7 +2,7 @@
 
 ## Install Web-hotel projekt
 ##
-##  Mort99j4@ZBC.dk
+##  Mort99j4@zbc.dk
 ##  Version 1.2a
 ## Inspired version of Suna@zbc.dk Web-Hotel script
 
