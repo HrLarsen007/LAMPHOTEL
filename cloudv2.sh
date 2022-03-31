@@ -39,6 +39,9 @@ domainAccount="Administrator"
 defaultPass="Kode1234!" ##Testing purpose only, being lazy is okay
 
 
+##
+mysqlLocal=true
+
 
 ## Defining variables for our wordpress and it's database
 server_root="/var/www/html"
@@ -218,13 +221,15 @@ sudo systemctl restart httpd.service
 echo -e "$red UPDATE at Line 173! $default"
 sudo $yap update -y selinux-policy*
 
-## Confirming the given vaules to wordpress with the user.
-dialog --title "setting variables" --msgbox \
-"[Server Root] = $server_root \
-[Database name] = $database \
-[Table prefix] = $table \
-[MySQL Local Username] = $localuser \ 
-[MySQL remote Username] = $remoteuser " 10 35 --and-widget
+if (( $mysqlLocal )) ; then
+	## Confirming the given vaules to wordpress with the user.
+	dialog --title "setting variables" --msgbox \
+	"[Server Root] = $server_root \
+	[Database name] = $database \
+	[Table prefix] = $table \
+	[MySQL Local Username] = $localuser \ 
+	[MySQL remote Username] = $remoteuser " 10 35 --and-widget
+fi
 
 
 # Downloading Wordpress
@@ -254,28 +259,30 @@ elif [ -e "/etc/apt" ] ; then
 fi
 mv $server_root/index.html $server_root/index.html.orig
 
-## Setting up our database with a lcoal and a remote user
-localpass=$( dialog --stdout --inputbox "Type $localuser@localhost password" 0 0 )
-remotepass=$( dialog --stdout --inputbox "Type $remoteuser password" 0 0 )
-echo -e "$green [+] Type MySQL root password $default"
-
-Q1="CREATE DATABASE $database;"
-Q2="CREATE USER $localuser@'localhost' IDENTIFIED BY '$localpass';"
-Q3="GRANT ALL PRIVILEGES on $database.* TO $localuser@localhost;"
-Q4="FLUSH PRIVILEGES;"
-
-Q5="CREATE USER $remoteuser@'%' IDENTIFIED BY '$remotepass';"
-Q6="GRANT ALL PRIVILEGES ON $database.* TO $remoteuser@'%' WITH GRANT OPTION;"
-Q7="FLUSH PRIVILEGES;"
-
-SQL=${Q1}${Q2}${Q3}${Q4}${Q5}${Q6}${Q7}
-
-if `mysql -u root -p -e "$SQL"` ; then
-	echo -e "$green [+] Successfully added $localuser & $remoteuser into the DB $database $default"
-else
-	echo -e "$red [-] Invaild MySQL password $default"
+if (( $mysqlLocal )) ; then
+	## Setting up our database with a lcoal and a remote user
+	localpass=$( dialog --stdout --inputbox "Type $localuser@localhost password" 0 0 )
+	remotepass=$( dialog --stdout --inputbox "Type $remoteuser password" 0 0 )
 	echo -e "$green [+] Type MySQL root password $default"
-	`mysql -u root -p -e "$SQL"`
+
+	Q1="CREATE DATABASE $database;"
+	Q2="CREATE USER $localuser@'localhost' IDENTIFIED BY '$localpass';"
+	Q3="GRANT ALL PRIVILEGES on $database.* TO $localuser@localhost;"
+	Q4="FLUSH PRIVILEGES;"
+
+	Q5="CREATE USER $remoteuser@'%' IDENTIFIED BY '$remotepass';"
+	Q6="GRANT ALL PRIVILEGES ON $database.* TO $remoteuser@'%' WITH GRANT OPTION;"
+	Q7="FLUSH PRIVILEGES;"
+
+	SQL=${Q1}${Q2}${Q3}${Q4}${Q5}${Q6}${Q7}
+
+	if `mysql -u root -p -e "$SQL"` ; then
+		echo -e "$green [+] Successfully added $localuser & $remoteuser into the DB $database $default"
+	else
+		echo -e "$red [-] Invaild MySQL password $default"
+		echo -e "$green [+] Type MySQL root password $default"
+		`mysql -u root -p -e "$SQL"`
+	fi
 fi
 
 echo -e "$green [+] Creating wp-config.php $default"
