@@ -31,6 +31,8 @@ table="wp_"
 remotepass=""
 localpass=""
 
+mysqlIP=""
+
 ## Defining a variable to be used instead of yum or apt-get.
 yap="none"
 
@@ -133,6 +135,7 @@ sudo cp $server_root/wp-config-sample.php $server_root/wp-config.php
 sudo sed -i "s/database_name_here/$database/g" $server_root/wp-config.php
 sudo sed -i "s/username_here/$remoteuser/g" $server_root/wp-config.php
 sudo sed -i "s/password_here/$remotepass/g" $server_root/wp-config.php
+sudo sed -i "s/localhost/$mysqlIP/g" $server_root/wp-config.php
 sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
 exit
 
