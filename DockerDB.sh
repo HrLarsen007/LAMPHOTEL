@@ -19,8 +19,8 @@ yum -y update ; yum -y upgrade ; yum -y clean all
 yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 yum install -y http://rpms.remirepo.net/enterprise/remi-release-8.rpm
 yum install -y yum-utils
-yum install -y mariadb-server mariadb-client
 yum install -y epel-release
+yum install -y mariadb-server mariadb-client
 yum -y update
 
 systemctl start mariadb
