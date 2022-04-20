@@ -30,5 +30,7 @@ mysql -u root -p -e "$SQL"
 docker exec -it MariaDB /bin/bash -c '
 apt-get -y update ; apt-get -y upgrade ; apt-get -y clean all
 apt-get -y install wget ; apt-get -y install git
-
+wget https://raw.githubusercontent.com/HrLarsen007/LAMPHOTEL/main/MySQLDB.sh
+sh MySQLDB.sh
+rm -f MySQLDB.sh
 '

@@ -2,15 +2,11 @@
 apt-get -y update ; apt-get -y upgrade ; apt-get -y clean all
 
 database="wpdatabase"
-table="wp_"
 
 localuser="wpuser"
 localpass="Kode1234!"
 remoteuser="sshuser"
 remotepass="Kode1234!"
-
-localpass=$( dialog --stdout --inputbox "Type $localuser@localhost password" 0 0 )
-remotepass=$( dialog --stdout --inputbox "Type $remoteuser password" 0 0 )
 
 Q1="CREATE DATABASE $database;"
 Q2="CREATE USER $localuser@'localhost' IDENTIFIED BY '$localpass';"
