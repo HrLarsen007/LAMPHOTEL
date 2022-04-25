@@ -53,9 +53,9 @@ echo -e "$green [+] Checking your OS compatibility $default"
 if [ -e "/etc/yum" ] ; then
 	yap="yum"
 elif [ -e "/etc/apt" ]; then
-	yap="apt-get"
+	yap="apt"
 else 
-	echo -e "$red [-] You'r OS is not supported by this script, exiting the script"
+	echo -e "$red [-] Your OS is not supported by this script, exiting the script"
 	exit 0
 fi
 
@@ -76,7 +76,14 @@ elif (( $my_id == "centos")) ; then
 		echo -e "$red [-] This script only supports version 7.x or 8.x of centos $default"
 		exit 0
 	fi
-else 
+elif (( $_my_id | awk '{print $2}') == "raspbian" )) ; then
+	if (( $my_id == "11" )) ; then
+		echo -e "$green [+] We are using an acceptable version of raspbian to use this script! $default"
+	else 
+		echo -e "$red [-] This script only supports version 11 of raspbian $default"
+		exit 0
+	fi
+else
 	echo -e "$red [-] This script does not support $my_prettyname $default"
 	exit 0
 fi
@@ -96,12 +103,11 @@ sudo $yap -y update ; $yap -y upgrade ; $yap -y clean all
 ## TODO system-switch-mail system-switch-mail-gnome
 ## Installing all the necessary packages for the required services
 echo -e "$green [+] Installing dependencies $default"
-if [ -e "/etc/yum" ] ; then
+if (( -e "/etc/yum" )) ; then
 	echo -e "$green [+] Installing epel $default"
 	sudo $yap -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$my_version.noarch.rpm  
 	echo -e "$green [+] Installing remi $default"
 	sudo $yap -y install http://rpms.remirepo.net/enterprise/remi-release-$my_version.rpm   
-	echo -e "$red UPDATE at Line 75! $default"
 	sudo $yap -y update
 	sudo $yap repolist
 	sudo $yap -y install $yap-utils
@@ -109,7 +115,6 @@ if [ -e "/etc/yum" ] ; then
 	echo -e "$green [+] Installing remi's php8.1 $default"
 	sudo $yap module -y reset php
 	sudo $yap module -y install php:remi-8.1
-	echo -e "$red UPDATE at Line 83! $default"
 	sudo $yap -y update
 	
 	echo -e "$green [+] Installing php http mariadb $default"
@@ -117,14 +122,14 @@ if [ -e "/etc/yum" ] ; then
 	sudo $yap -y install php-mcrypt php-cli php-gd php-curl php-ldap php-zip php-fileinfo php-fpm php-xml
 	sudo $yap -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
 	sudo $yap -y install epel-release
-	echo -e "$red UPDATE at Line 91! $default"
 	sudo $yap -y update ; $yap -y upgrade
 
-elif [ -e "/etc/apt" ] ; then
+elif (( -e "/etc/apt" )) ; then
+	sudo $yap -y install $yap-utils
 	sudo $yap -y install apache2 php8.1 php8.1-gd php8.1-mysql libapache2-mod-php8.1
-	sudo $yap -y install mysql-server libmysqlclient-dev
-	echo -e "$red UPDATE at Line 97! $default"
+	sudo $yap -y install mariadb-server mariadb
 	sudo $yap -y update ; $yap -y upgrade
+	sudo $yap -y install ufw
 fi
 sudo $yap -y install bind bind-utils 
 sudo $yap -y install nano wget net-tools varnish rsync dialog
@@ -134,16 +139,12 @@ sudo $yap -y install fail2ban fail2ban-systemd postfix dovecot
 ##Packages required for AD join!
 sudo $yap -y install realmd sssd oddjob oddjob-mkhomedir adcli samba-common samba-common-tools krb5-workstation authselect-compat
 sudo $yap -y install vsftpd openssl
-echo -e "$red UPDATE at Line 107! $default"
 sudo $yap update ; $yap upgrade
-
-
-## Assigning the unit to the domain
 
 
 ##hostnamectl set-hostname $domainHostName
 ##echo '$defaultPass' | realm join $domainRealm -U $domainAccount
-if (( $domain )) ; then
+if (( $domain == "true" )) ; then
 	hostnamectl set-hostname $domainHostName
 	echo '$defaultPass' | realm join $domainRealm -U $domainAccount
 fi
@@ -168,21 +169,32 @@ sudo mysql_secure_installation
 ##Setting up a php test site
 touch /var/www/html/phpinfo.php && echo '<?php phpinfo(); ?>' >> /var/www/html/phpinfo.php 
 
-##Setting up Webmin repo information
-touch /etc/yum.repos.d/webmin.repo && 
-echo '[Webmin]' >> /etc/yum.repos.d/webmin.repo
-echo 'name=Webmin Distribution Neutral' >> /etc/yum.repos.d/webmin.repo
-echo '#baseurl=https://download.webmin.com/download/yum' >> /etc/yum.repos.d/webmin.repo
-echo 'mirrorlist=https://download.webmin.com/download/yum/mirrorlist' >> /etc/yum.repos.d/webmin.repo
-echo 'enabled=1' >> /etc/yum.repos.d/webmin.repo
-echo 'gpgkey=https://download.webmin.com/jcameron-key.asc' >> /etc/yum.repos.d/webmin.repo
-echo 'gpgcheck=1' >> /etc/yum.repos.d/webmin.repo
 
-sudo wget https://download.webmin.com/jcameron-key.asc
-echo -e "$red UPDATE at Line 137! $default"
-sudo $yap -y update ; $yap -y upgrade 
-sudo rpm --import jcameron-key.asc
+##Setting up Webmin repo information
+if (( -e "/etc/yum" )) ; then
+
+	touch /etc/yum.repos.d/webmin.repo && 
+	echo '[Webmin]' >> /etc/yum.repos.d/webmin.repo
+	echo 'name=Webmin Distribution Neutral' >> /etc/yum.repos.d/webmin.repo
+	echo '#baseurl=https://download.webmin.com/download/yum' >> /etc/yum.repos.d/webmin.repo
+	echo 'mirrorlist=https://download.webmin.com/download/yum/mirrorlist' >> /etc/yum.repos.d/webmin.repo
+	echo 'enabled=1' >> /etc/yum.repos.d/webmin.repo
+	echo 'gpgkey=https://download.webmin.com/jcameron-key.asc' >> /etc/yum.repos.d/webmin.repo
+	echo 'gpgcheck=1' >> /etc/yum.repos.d/webmin.repo
+
+	sudo wget https://download.webmin.com/jcameron-key.asc
+	sudo $yap -y update ; $yap -y upgrade 
+	sudo rpm --import jcameron-key.asc
+elif (( -e "etc/apt" )) ; then
+	wget -qO - http://www.webmin.com/jcameron-key.asc | sudo apt-key add -
+	sudo sh -c 'echo "deb http://download.webmin.com/download/repository sarge contrib" > /etc/apt/sources.list.d/webmin.list'
+	sudo $yap -y update ; $yap -y upgrade
+	sudo ufw allow 10000
+fi
+
 sudo $yap -y install webmin
+sudo systemctl start webmin
+sudo systemctl enable webmin
 
 ## Setting up the mail service Postfix
 echo -e "$green [+] Installing mail system (Postfix) $default"
@@ -203,20 +215,22 @@ systemctl enable postfix
 ##chmod 0600 /etc/postfix/sasl_passwd /etc/postfix/sasl_passwd.db
 
 ## Creating firewall execptions
-echo -e "$green [+] Updating the firewall rule set to allow services $default"
-sudo firewall-cmd --permanent --zone=public --add-service=smtp ## Mail Service
-sudo firewall-cmd --permanent --zone=public --add-service=http  ##Apache
-sudo firewall-cmd --permanent --zone=public --add-service=https ##Secure Apache
-sudo firewall-cmd --permanent --zone=public --add-service=ftp ## FTP Service
-sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp ##Webmin
-sudo firewall-cmd --permanent --zone=public --add-port=10100-10200/tcp ## Passive Ports 
-sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp ##Databse (mariadb)
-sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
-sudo firewall-cmd --reload
+if (( -e "/etc/yum" )) ; then
+	
+	echo -e "$green [+] Updating the firewall rule set to allow services $default"
+	sudo firewall-cmd --permanent --zone=public --add-service=smtp ## Mail Service
+	sudo firewall-cmd --permanent --zone=public --add-service=http  ##Apache
+	sudo firewall-cmd --permanent --zone=public --add-service=https ##Secure Apache
+	sudo firewall-cmd --permanent --zone=public --add-service=ftp ## FTP Service
+	sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp ##Webmin
+	sudo firewall-cmd --permanent --zone=public --add-port=10100-10200/tcp ## Passive Ports 
+	sudo firewall-cmd --permanent --zone=public --add-port=3306/tcp ##Databse (mariadb)
+	sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
+	sudo firewall-cmd --reload
+	sudo systemctl restart httpd.service
+	sudo $yap update -y selinux-policy*
+fi
 
-sudo systemctl restart httpd.service
-echo -e "$red UPDATE at Line 173! $default"
-sudo $yap update -y selinux-policy*
 
 ## Confirming the given vaules to wordpress with the user.
 dialog --title "setting variables" --msgbox \
