@@ -125,9 +125,13 @@ if (( -e "/etc/yum" )) ; then
 	sudo $yap -y update ; $yap -y upgrade
 
 elif (( -e "/etc/apt" )) ; then
+	
 	sudo $yap -y install $yap-utils
-	sudo $yap -y install apache2 php8.1 php8.1-gd php8.1-mysql libapache2-mod-php8.1
-	sudo $yap -y install mariadb-server mariadb
+	curl https://packages.sury.org/php/apt.gpg | sudo tee /usr/share/keyrings/suryphp-archive-keyring.gpg >/dev/null
+	echo "deb [signed-by=/usr/share/keyrings/suryphp-archive-keyring.gpg] https://packages.sury.org/php/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/sury-php.list
+	sudo $yap update -y
+	sudo $yap -y install apache2 php8.1 php8.1-cli php8.1-mysql libapache2-mod-php8.1 php8.1-gd 
+	sudo $yap install mariadb-server
 	sudo $yap -y update ; $yap -y upgrade
 	sudo $yap -y install ufw
 fi
