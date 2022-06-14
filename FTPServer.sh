@@ -1,8 +1,8 @@
 #!bin/bash
 
 sudo yum -y update ; yum -y upgrade ; yum clean all
-sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm  
-sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm   
+sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+sudo yum -y install https://rpms.remirepo.net/enterprise/remi-release-7.rpm
 
 sudo yum -y install fail2ban fail2ban-systemd postfix dovecot
 sudo yum -y install nano wget net-tools varnish rsync dialog

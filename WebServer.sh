@@ -12,18 +12,20 @@ host="192.168.1.109"
 
 sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-sudo yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+sudo yum -y install https://rpms.remirepo.net/enterprise/remi-release-7.rpm
 sudo yum -y install yum-utils
 sudo yum -y install epel-release
 sudo yum repolist
 
 sudo yum module -y reset php
-sudo yum module -y install php:remi-8.1
+sudo yum-config-manager --disable 'remi-php*'
+sudo yum-config-manager --enable remi-php81
 sudo yum -y update ; yum -y upgrade ; yum clean all
 
 sudo yum -y install php
 sudo yum -y install php-mcrypt php-cli php-gd php-curl php-ldap php-zip php-fileinfo php-fpm php-xml
 sudo yum -y install php-mysqlnd php-mbstring php-pdo php-opcache php-common
+sudo yum -y install php-{devel,pear,bcmath,json,redis,memcache}
 sudo yum -y install httpd bind bind-utils
 sudo yum -y install perl perl-Net-SSLeay unzip perl-Encode-Detect perl-Data-Dumper
 ##sudo yum -y install mariadb-server mariadb
@@ -39,6 +41,7 @@ sudo systemctl start httpd.service
 sudo systemctl enable httpd.service
 sudo systemctl start varnish.service
 sudo systemctl enable varnish.service
+sudo yum -y update ; yum -y upgrade ; yum clean all
 
 ##Setting up a php test site
 touch /var/www/html/phpinfo.php && echo '<?php phpinfo(); ?>' >> /var/www/html/phpinfo.php 
@@ -84,5 +87,8 @@ sudo cp $server_root/wp-config-sample.php $server_root/wp-config.php
 sudo sed -i "s/database_name_here/$database/g" $server_root/wp-config.php
 sudo sed -i "s/username_here/$localuser/g" $server_root/wp-config.php
 sudo sed -i "s/password_here/$localpass/g" $server_root/wp-config.php
-sudo sed -i "s/wp_/$table/g" $server_root/wp-config.
+sudo sed -i "s/wp_/$table/g" $server_root/wp-config.php
 sudo sed -i "s/localhost/$host/g" $server_root/wp-config.php
+
+sudo yum -y update ; yum -y upgrade ; yum clean all
+sudo systemctl restart httpd.service
