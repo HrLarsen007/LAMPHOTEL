@@ -8,7 +8,7 @@ localuser="wpuser"
 remoteuser="hemliguser"
 database="wpdatabase"
 table="wp_"
-host="127.0.0.1"
+host="192.168.1.109"
 
 sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm

@@ -8,7 +8,7 @@ sudo yum -y install fail2ban fail2ban-systemd postfix dovecot
 sudo yum -y install nano wget net-tools varnish rsync dialog
 sudo yum -y install perl perl-Net-SSLeay unzip perl-Encode-Detect perl-Data-Dumper
 sudo yum -y install epel-release
-sudo yum -y install yum-util
+sudo yum -y install yum-utils
 sudo yum -y install vsftpd openssl
 
 sudo firewall-cmd --permanent --zone=public --add-service=ftp ## FTP Service
