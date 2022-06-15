@@ -21,13 +21,12 @@ sudo systemctl enable mariadb.service
 
 sudo mysql_secure_installation
 
-
 Q1="CREATE DATABASE wpdatabase;"
 Q2="CREATE USER wpuser@'localhost' IDENTIFIED BY 'Kode1234!';"
-Q3="GRANT ALL PRIVILEGES on wpdatabase.* TO wpusers@localhost WITH GRANT OPTION;"
+Q3="GRANT ALL PRIVILEGES on wpdatabase.* TO wpuser@localhost WITH GRANT OPTION;"
 Q4="FLUSH PRIVILEGES;"
 Q5="CREATE USER wpremote@'%' IDENTIFIED BY 'Kode1234!';"
 Q6="GRANT ALL PRIVILEGES ON wpdatabase.* TO wpremote@'%' WITH GRANT OPTION;"
 Q7="FLUSH PRIVILEGES;"
 SQL=${Q1}${Q2}${Q3}${Q4}${Q5}${Q6}${Q7}
-mysql -u root -p -e "$SQL"
+mysql -u root --password=Kode1234! -e "$SQL"
