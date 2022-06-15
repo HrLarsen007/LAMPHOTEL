@@ -84,7 +84,7 @@ sudo firewall-cmd --permanent --zone=public --add-service=ftp ## FTP Service
 sudo firewall-cmd --permanent --zone=public --add-port=10000/tcp ##Webmin
 sudo firewall-cmd --permanent --zone=public --add-port=10100-10200/tcp ## Passive Ports 
 sudo firewall-cmd --permanent --zone=public --add-port=53/tcp
-sudo firewall-cmd --permanent --zone=public --add-port=22/tcp ## SFTP
+sudo firewall-cmd --permanent --zone=public --add-port=22/tcp ## SSH
 sudo firewall-cmd --reload
 
 sudo systemctl restart httpd.service
@@ -117,10 +117,13 @@ sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo systemctl restart httpd.service
 
 
+sudo sed -i "s/PasswordAuthentication no/PasswordAuthentication yes"/g /etc/ssh/sshd_config
+systemctl restart sshd
+
 sudo openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/vsftpd.key -x509 -days 365 -out /etc/pki/tls/certs/vsftpd.crt
 mv /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf_orig
 touch /etc/vsftpd/vsftpd.conf
-echo 'anonymous_enable=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'anonymous_enable=NO' >> /etc/vsftpd/vsftpd.conf
 echo 'local_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'write_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'local_umask=022' >> /etc/vsftpd/vsftpd.conf
@@ -145,7 +148,7 @@ echo 'ssl_ciphers=HIGH' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_min_port=10100' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_max_port=10200' >> /etc/vsftpd/vsftpd.conf
-echo 'allow_anon_ssl=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'allow_anon_ssl=NO' >> /etc/vsftpd/vsftpd.conf
 
 systemctl start vsftpd
 systemctl enable vsftpd
@@ -153,5 +156,6 @@ systemctl restart vsftpd
 sudo groupadd FTP
 sudo adduser -d /home/ftpuser/ -s /bin/bash -g FTP ftpuser
 sudo passwd ftpuser
-sudo chmod 701 /home
+sudo chmod 711 /home
 sudo chmod 750 /home/ftpuser/
+sudo chown –R ftpuser: /home/ftpuser/
