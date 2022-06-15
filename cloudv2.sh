@@ -326,15 +326,31 @@ echo 'pasv_enable=YES' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_min_port=10100' >> /etc/vsftpd/vsftpd.conf
 echo 'pasv_max_port=10200' >> /etc/vsftpd/vsftpd.conf
 echo 'allow_anon_ssl=YES' >> /etc/vsftpd/vsftpd.conf
+echo 'user_sub_token=$USER' >> /etc/vsftpd/vsftpd.conf
+echo 'local_root=/home/$USER/ftp' >> /etc/vsftpd/vsftpd.conf
+echo 'chroot_local_user=YES' >> /etc/vsftpd/vsftpd.conf
+## echo 'allow_writeable_chroot=YES' >> /etc/vsftpd/vsftpd.conf
 
 systemctl start vsftpd
 systemctl enable vsftpd
 systemctl restart vsftpd
-sudo groupadd FTP
-sudo adduser -d /home/ftpuser/ -s /bin/bash -g FTP ftpuser
+sudo groupadd FTP-GRP
+sudo adduser ftpuser
 sudo passwd ftpuser
+echo "ftpuser" | sudo tee -a /etc/vsftpd/user_list
+sudo mkdir -p /home/ftpuser/ftp/
+sudo mkdir -p /home/ftpuser/ftp/uploads
+sudo chmod 550 /home/ftpuser/ftp
+sudo chmod 750 /home/ftpuser/ftp/upload
+sudo chown -R ftpuser: /home/ftpuser/ftp
+
 sudo chmod 701 /home
 sudo chmod 750 /home/ftpuser/
+
+echo -e '#!/bin/sh\necho "This account is limited to FTP access only."' | sudo tee -a  /bin/ftponly
+sudo chmod a+x /bin/ftponly
+echo "/bin/ftponly" | sudo tee -a /etc/shells
+sudo usermod ftpuser -s /bin/ftponly
 
 echo -e "$green [+] You access Wordpress via https://localhost/ or https://$my_ip/ $default"
 echo -e "$green [+] You can access Webmin via https://localhost:10000 or https://$my_ip:10000 $default"
