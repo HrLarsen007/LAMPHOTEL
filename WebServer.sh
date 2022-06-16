@@ -4,10 +4,9 @@
 
 server_root="/var/www/html"
 wp_source="https://wordpress.org/latest.tar.gz"
-localuser="wpuser"
 remoteuser="dorte@webhoteldb"
 remotepass="Kode1234!"
-database="wpdatabase"
+database="dbwebhotel"
 table="wp_"
 host="webhoteldb.mariadb.database.azure.com"
 
@@ -36,7 +35,8 @@ sudo yum -y install nano mc net-tools wget varnish
 sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo yum -y install fail2ban fail2ban-systemd postfix dovecot
 
-sudo yum  -y install vsftpd openssl
+sudo yum -y install vsftpd openssl
+sudo yum -y install mod_ssl
 
 sudo touch /etc/yum.repos.d/mariadb.repo
 
@@ -77,7 +77,6 @@ sudo rpm --import jcameron-key.asc
 sudo yum -y install webmin
 
 
-echo -e "$green [+] Updating the firewall rule set to allow services $default"
 sudo firewall-cmd --permanent --zone=public --add-service=http  ##Apache
 sudo firewall-cmd --permanent --zone=public --add-service=https ##Secure Apache
 sudo firewall-cmd --permanent --zone=public --add-service=ftp ## FTP Service
@@ -117,10 +116,18 @@ sudo yum -y update ; yum -y upgrade ; yum clean all
 sudo systemctl restart httpd.service
 
 
-sudo sed -i "s/PasswordAuthentication no/PasswordAuthentication yes"/g /etc/ssh/sshd_config
+sudo sed -i "s/PasswordAuthentication no/PasswordAuthentication yes/g" /etc/ssh/sshd_config
 systemctl restart sshd
 
 sudo openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/vsftpd.key -x509 -days 365 -out /etc/pki/tls/certs/vsftpd.crt
+
+
+## nano /etc/httpd/conf.d/ssl.conf
+## DocumentRoot "/var/www/html"
+## ServerName publicIP:443
+## SSLCertificateFile /etc/pki/tls/certs/vsftpd.crt
+## SSLCertificateKeyFile /etc/pki/tls/private/vsftpd.key
+
 mv /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf_orig
 touch /etc/vsftpd/vsftpd.conf
 echo 'anonymous_enable=NO' >> /etc/vsftpd/vsftpd.conf
