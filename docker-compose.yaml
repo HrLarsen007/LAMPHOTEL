@@ -1,0 +1,88 @@
+version: "3.9"
+
+services:
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - ./data/nginx:/etc/nginx/conf.d
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+  
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    #environment:
+      #- VIRTUAL_HOST=portainer.yourdomain.com
+      #- VIRTUAL_PORT=9000
+    ports:
+      - "8000:8000"
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+
+  apache:
+    image: httpd:latest
+    ports:
+    - '8080:80'
+    restart: always
+    volumes:
+    - ./data/website:/usr/local/apache2/htdocs
+
+  mariadb:
+    image: mariadb
+    ports:
+      - 3306:3306
+    volumes:
+      - ./data/mariadb:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=radius
+      - MYSQL_PASSWORD=radpass
+      - MYSQL_USER=radius
+      - MYSQL_DATABASE=radius
+    restart: always
+
+
+  freeradius:
+    image: "2stacks/freeradius"
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    volumes:
+      - "./configs/radius/users:/etc/raddb/users"
+      - "./configs/radius/clients.conf:/etc/raddb/clients.conf"
+    environment:
+      - DB_NAME=radius
+      - DB_HOST=mariadb
+      - DB_USER=radius
+      - DB_PASS=radpass
+      - DB_PORT=3306
+      #- RADIUS_KEY=testing123
+      #- RAD_CLIENTS=10.0.0.0/24
+      - RAD_DEBUG=yes
+    depends_on:
+      - mariadb
+    links:
+      - mariadb
+    restart: always
+
+volumes:
+  portainer_data:
+
+
+# https://pentacent.medium.com/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71
