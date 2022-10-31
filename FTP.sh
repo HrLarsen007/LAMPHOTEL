@@ -1,3 +1,1 @@
-yum -y install bind bind-utils sssd 
-yum update -y selinux-policy*
-yum -y install vsftpd openssl
+sudo openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/vsftpd.key -x509 -days 365 -out /etc/pki/tls/certs/vsftpd.crt
