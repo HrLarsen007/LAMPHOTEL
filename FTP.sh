@@ -1,1 +1,4 @@
-sudo openssl req -newkey rsa:2048 -nodes -keyout /etc/pki/tls/private/vsftpd.key -x509 -days 365 -out /etc/pki/tls/certs/vsftpd.crt
+sudo yum install vsftpd
+sudo systemctl start vsftpd
+sudo systemctl enable vsftpd
+sudo systemctl status vsftpd
